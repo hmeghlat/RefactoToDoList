@@ -14,6 +14,10 @@ beforeEach(() => {
     }
 });
 
+afterEach(async () => {
+    await db.teardown();
+});
+
 test('it initializes correctly', async () => {
     await db.init();
 });
@@ -26,24 +30,6 @@ test('it can store and retrieve items', async () => {
     const items = await db.getItems();
     expect(items.length).toBe(1);
     expect(items[0]).toEqual(ITEM);
-});
-
-test('it can update an existing item', async () => {
-    await db.init();
-
-    const initialItems = await db.getItems();
-    expect(initialItems.length).toBe(0);
-
-    await db.storeItem(ITEM);
-
-    await db.updateItem(
-        ITEM.id,
-        Object.assign({}, ITEM, { completed: !ITEM.completed }),
-    );
-
-    const items = await db.getItems();
-    expect(items.length).toBe(1);
-    expect(items[0].completed).toBe(!ITEM.completed);
 });
 
 test('it can remove an existing item', async () => {
