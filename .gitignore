@@ -7,4 +7,6 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 
+dist/
+dist-frontend/
 .claude/settings.local.json
