@@ -1,11 +1,11 @@
-const db = require('../../src/persistence');
+const db = require('../../src/backend/persistence');
 const addItem = require('../../src/routes/addItem');
 const ITEM = { id: 12345 };
 const {v4 : uuid} = require('uuid');
 
 jest.mock('uuid', () => ({ v4: jest.fn() }));
 
-jest.mock('../../src/persistence', () => ({
+jest.mock('../../src/backend/persistence', () => ({
     removeItem: jest.fn(),
     storeItem: jest.fn(),
     getItem: jest.fn(),
