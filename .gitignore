@@ -7,6 +7,14 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 
+# Env files
+.env
+.env.*
+!.env.test
+
+# Local sqlite db (tests/dev)
+.tmp/
+
 dist/
 dist-frontend/
 .claude/settings.local.json

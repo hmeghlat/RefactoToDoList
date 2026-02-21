@@ -1,33 +1,57 @@
 // @ts-check
 import { test, expect } from '@playwright/test';
 
+
 test.describe.configure({ mode: 'serial' });
 
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {string} name
+ */
 async function deleteTasksByName(page, name) {
-    const items = await page.evaluate(async (filter) => {
+    const items = await page.evaluate(
+        /** @param {string} filter */ async (filter) => {
         const res = await fetch('/items');
+        /** @type {{ id: string, name: string }[]} */
         const all = await res.json();
-        return all.filter(i => i.name.includes(filter));
-    }, name);
+        return all.filter((i) => i.name.includes(filter));
+    },
+        name,
+    );
 
     for (const item of items) {
-        await page.evaluate(async (id) => {
+        await page.evaluate(
+            /** @param {string} id */ async (id) => {
             await fetch(`/items/${id}`, { method: 'DELETE' });
-        }, item.id);
+        },
+            item.id,
+        );
     }
 }
 
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {string} name
+ */
 async function addTask(page, name) {
-    await page.evaluate(async (taskName) => {
+    await page.evaluate(
+        /** @param {string} taskName */ async (taskName) => {
         await fetch('/items', {
             method: 'POST',
             body: JSON.stringify({ name: taskName }),
             headers: { 'Content-Type': 'application/json' },
         });
-    }, name);
+    },
+        name,
+    );
 }
 
 // Fonction utilitaire pour récupérer la ligne d'une tâche par son nom
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {string} taskName
+ * @returns {import('@playwright/test').Locator}
+ */
 function getTaskRow(page, taskName) {
     return page.locator('.name', { hasText: taskName }).first().locator('..');
 }
