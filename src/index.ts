@@ -1,10 +1,10 @@
-const express = require('express');
+import express = require('express');
 const app = express();
-const db = require('./backend/persistence');
-const getItems = require('./routes/getItems');
-const addItem = require('./routes/addItem');
-const updateItem = require('./routes/updateItem');
-const deleteItem = require('./routes/deleteItem');
+import db = require('./backend/persistence');
+import getItems = require('./routes/getItems');
+import addItem = require('./routes/addItem');
+import updateItem = require('./routes/updateItem');
+import deleteItem = require('./routes/deleteItem');
 
 const port = process.env.PORT || 3000;
 

@@ -1,10 +1,11 @@
-const db = require('../../src/backend/persistence');
-const getItems = require('../../src/routes/getItems');
 const ITEMS = [{ id: 12345 }];
 
 jest.mock('../../src/backend/persistence', () => ({
     getItems: jest.fn(),
 }));
+
+const db = require('../../src/backend/persistence');
+const getItems = require('../../src/routes/getItems');
 
 test('it gets items correctly', async () => {
     const req = {};

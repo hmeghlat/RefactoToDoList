@@ -1,6 +1,6 @@
-const db = require('../backend/persistence');
+import db = require('../backend/persistence');
 
-module.exports = async (req, res) => {
+export = async (req: any, res: any) => {
     await db.updateItem(req.params.id, {
         name: req.body.name,
         completed: req.body.completed,

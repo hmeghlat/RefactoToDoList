@@ -1,7 +1,7 @@
-const db = require('../backend/persistence');
-const {v4 : uuid} = require('uuid');
+import db = require('../backend/persistence');
+import { v4 as uuid } from 'uuid';
 
-module.exports = async (req, res) => {
+export = async (req: any, res: any) => {
     const item = {
         id: uuid(),
         name: req.body.name,
