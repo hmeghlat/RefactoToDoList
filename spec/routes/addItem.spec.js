@@ -1,15 +1,14 @@
-const ITEM = { id: 12345 };
 jest.mock('uuid', () => ({ v4: jest.fn() }));
 
-jest.mock('../../src/backend/persistence', () => ({
-    removeItem: jest.fn(),
-    storeItem: jest.fn(),
-    getItem: jest.fn(),
+jest.mock('../../src/domain/TodoService', () => ({
+    TodoService: jest.fn().mockImplementation(() => ({
+        addItem: jest.fn(),
+    })),
 }));
 
-const db = require('../../src/backend/persistence');
+const { TodoService } = require('../../src/domain/TodoService');
 const addItem = require('../../src/routes/addItem');
-const {v4 : uuid} = require('uuid');
+const { v4: uuid } = require('uuid');
 
 test('it stores item correctly', async () => {
     const id = 'something-not-a-uuid';
@@ -17,14 +16,14 @@ test('it stores item correctly', async () => {
     const req = { body: { name } };
     const res = { send: jest.fn() };
 
-    uuid.mockReturnValue(id);
-
-    await addItem(req, res);
-
     const expectedItem = { id, name, completed: false };
+    const service = new TodoService();
+    service.addItem.mockReturnValue(Promise.resolve(expectedItem));
 
-    expect(db.storeItem.mock.calls.length).toBe(1);
-    expect(db.storeItem.mock.calls[0][0]).toEqual(expectedItem);
+    await addItem(service)(req, res);
+
+    expect(service.addItem.mock.calls.length).toBe(1);
+    expect(service.addItem.mock.calls[0][0]).toBe(name);
     expect(res.send.mock.calls[0].length).toBe(1);
     expect(res.send.mock.calls[0][0]).toEqual(expectedItem);
 });

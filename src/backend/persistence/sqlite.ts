@@ -1,3 +1,6 @@
+import { TodoItem } from '../../domain/TodoItem';
+import { TodoRepository } from '../../domain/TodoRepository';
+
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const dbLocation = process.env.SQLITE_DB_LOCATION || '/etc/todos/todo.db';
@@ -37,7 +40,7 @@ async function teardown() {
     });
 }
 
-async function getItems() {
+async function getItems(): Promise<TodoItem[]> {
     return new Promise((resolve, rej) => {
         db.all('SELECT * FROM todo_items', (err, rows) => {
             if (err) return rej(err);
@@ -52,7 +55,7 @@ async function getItems() {
     });
 }
 
-async function getItem(id) {
+async function getItem(id: string): Promise<TodoItem> {
     return new Promise((resolve, rej) => {
         db.all('SELECT * FROM todo_items WHERE id=?', [id], (err, rows) => {
             if (err) return rej(err);
@@ -67,7 +70,7 @@ async function getItem(id) {
     });
 }
 
-async function storeItem(item) {
+async function storeItem(item: TodoItem): Promise<void> {
     return new Promise<void>((resolve, rej) => {
         db.run(
             'INSERT INTO todo_items (id, name, completed) VALUES (?, ?, ?)',
@@ -80,7 +83,7 @@ async function storeItem(item) {
     });
 }
 
-async function updateItem(id, item) {
+async function updateItem(id: string, item: Partial<TodoItem>): Promise<void> {
     return new Promise<void>((resolve, rej) => {
         db.run(
             'UPDATE todo_items SET name=?, completed=? WHERE id = ?',
@@ -93,7 +96,7 @@ async function updateItem(id, item) {
     });
 } 
 
-async function removeItem(id) {
+async function removeItem(id: string): Promise<void> {
     return new Promise<void>((resolve, rej) => {
         db.run('DELETE FROM todo_items WHERE id = ?', [id], err => {
             if (err) return rej(err);
@@ -102,7 +105,7 @@ async function removeItem(id) {
     });
 }
 
-export = {
+const repository: TodoRepository & { init: typeof init; teardown: typeof teardown } = {
     init,
     teardown,
     getItems,
@@ -111,3 +114,5 @@ export = {
     updateItem,
     removeItem,
 };
+
+export = repository;

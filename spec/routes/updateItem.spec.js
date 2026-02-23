@@ -1,11 +1,12 @@
 const ITEM = { id: 12345 };
 
-jest.mock('../../src/backend/persistence', () => ({
-    getItem: jest.fn(),
-    updateItem: jest.fn(),
+jest.mock('../../src/domain/TodoService', () => ({
+    TodoService: jest.fn().mockImplementation(() => ({
+        updateItem: jest.fn(),
+    })),
 }));
 
-const db = require('../../src/backend/persistence');
+const { TodoService } = require('../../src/domain/TodoService');
 const updateItem = require('../../src/routes/updateItem');
 
 test('it updates items correctly', async () => {
@@ -15,19 +16,17 @@ test('it updates items correctly', async () => {
     };
     const res = { send: jest.fn() };
 
-    db.getItem.mockReturnValue(Promise.resolve(ITEM));
+    const service = new TodoService();
+    service.updateItem.mockReturnValue(Promise.resolve(ITEM));
 
-    await updateItem(req, res);
+    await updateItem(service)(req, res);
 
-    expect(db.updateItem.mock.calls.length).toBe(1);
-    expect(db.updateItem.mock.calls[0][0]).toBe(req.params.id);
-    expect(db.updateItem.mock.calls[0][1]).toEqual({
+    expect(service.updateItem.mock.calls.length).toBe(1);
+    expect(service.updateItem.mock.calls[0][0]).toBe(req.params.id);
+    expect(service.updateItem.mock.calls[0][1]).toEqual({
         name: 'New title',
         completed: false,
     });
-
-    expect(db.getItem.mock.calls.length).toBe(1);
-    expect(db.getItem.mock.calls[0][0]).toBe(req.params.id);
 
     expect(res.send.mock.calls[0].length).toBe(1);
     expect(res.send.mock.calls[0][0]).toEqual(ITEM);

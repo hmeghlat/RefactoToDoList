@@ -1,10 +1,9 @@
-import db = require('../backend/persistence');
+import { TodoService } from '../domain/TodoService';
 
-export = async (req: any, res: any) => {
-    await db.updateItem(req.params.id, {
+export = (todoService: TodoService) => async (req: any, res: any) => {
+    const item = await todoService.updateItem(req.params.id, {
         name: req.body.name,
         completed: req.body.completed,
     });
-    const item = await db.getItem(req.params.id);
     res.send(item);
 };

@@ -1,20 +1,22 @@
 import express = require('express');
 const app = express();
 import db = require('./backend/persistence');
+import { TodoService } from './domain/TodoService';
 import getItems = require('./routes/getItems');
 import addItem = require('./routes/addItem');
 import updateItem = require('./routes/updateItem');
 import deleteItem = require('./routes/deleteItem');
 
 const port = process.env.PORT || 3000;
+const todoService = new TodoService(db);
 
 app.use(express.json());
 app.use(express.static(__dirname + '/static'));
 
-app.get('/items', getItems);
-app.post('/items', addItem);
-app.put('/items/:id', updateItem);
-app.delete('/items/:id', deleteItem);
+app.get('/items', getItems(todoService));
+app.post('/items', addItem(todoService));
+app.put('/items/:id', updateItem(todoService));
+app.delete('/items/:id', deleteItem(todoService));
 
 db.init().then(() => {
     app.listen(port, () => console.log(`Listening on port ${port}`));
