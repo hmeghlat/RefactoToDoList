@@ -2,10 +2,10 @@ import express = require('express');
 const app = express();
 import db = require('./backend/persistence');
 import { TodoService } from './domain/TodoService';
-import getItems = require('./routes/getItems');
-import addItem = require('./routes/addItem');
-import updateItem = require('./routes/updateItem');
-import deleteItem = require('./routes/deleteItem');
+import getItems = require('./backend/routes/getItems');
+import addItem = require('./backend/routes/addItem');
+import updateItem = require('./backend/routes/updateItem');
+import deleteItem = require('./backend/routes/deleteItem');
 
 const port = process.env.PORT || 3000;
 const todoService = new TodoService(db);

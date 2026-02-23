@@ -7,7 +7,7 @@ jest.mock('../../src/domain/TodoService', () => ({
 }));
 
 const { TodoService } = require('../../src/domain/TodoService');
-const updateItem = require('../../src/routes/updateItem');
+const updateItem = require('../../src/backend/routes/updateItem');
 
 test('it updates items correctly', async () => {
     const req = {

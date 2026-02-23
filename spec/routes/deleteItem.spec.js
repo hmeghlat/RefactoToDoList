@@ -5,7 +5,7 @@ jest.mock('../../src/domain/TodoService', () => ({
 }));
 
 const { TodoService } = require('../../src/domain/TodoService');
-const deleteItem = require('../../src/routes/deleteItem');
+const deleteItem = require('../../src/backend/routes/deleteItem');
 
 test('it removes item correctly', async () => {
     const req = { params: { id: 12345 } };

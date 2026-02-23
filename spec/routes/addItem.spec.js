@@ -7,7 +7,7 @@ jest.mock('../../src/domain/TodoService', () => ({
 }));
 
 const { TodoService } = require('../../src/domain/TodoService');
-const addItem = require('../../src/routes/addItem');
+const addItem = require('../../src/backend/routes/addItem');
 const { v4: uuid } = require('uuid');
 
 test('it stores item correctly', async () => {
