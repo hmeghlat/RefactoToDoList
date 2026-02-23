@@ -1,6 +1,16 @@
-import { TodoRepository } from '../../domain/TodoRepository';
+import { SqliteRepository } from '../../domain/SqliteRepository';
+import { InMemoryRepository } from '../../domain/InMemoryRepository';
 
-const impl: TodoRepository & { init(): Promise<void>; teardown(): Promise<void> } =
-    process.env.MYSQL_HOST ? require('./mysql') : require('./sqlite');
+type PersistenceRepository = SqliteRepository | InMemoryRepository;
+
+let impl: PersistenceRepository;
+
+if (process.env.NODE_ENV === 'test') {
+    impl = require('./inMemory');
+} else if (process.env.MYSQL_HOST) {
+    impl = require('./mysql');
+} else {
+    impl = require('./sqlite');
+}
 
 export = impl;
