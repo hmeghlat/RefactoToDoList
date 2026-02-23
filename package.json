@@ -13,6 +13,8 @@
     "test:persistence": "jest --testPathPattern=spec/persistence",
     "test:routes": "jest --testPathPattern=spec/routes",
     "dev": "nodemon -L --watch src --ignore src/frontend --exec \"tsc && node dist/index.js\"",
+    "lint": "eslint src/",
+    "lint:architecture": "depcruise src --config .dependency-cruiser.cjs",
     "frontend:dev": "cd src/frontend && npm run dev",
     "frontend:build": "cd src/frontend && npm run build"
   },
@@ -34,14 +36,18 @@
     "singleQuote": true
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.58.2",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.3.0",
+    "dependency-cruiser": "^17.3.8",
     "dotenv": "^17.3.1",
+    "eslint": "^10.0.1",
     "jest": "^30.2.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.1",
     "ts-jest": "^29.4.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.0"
   }
 }
