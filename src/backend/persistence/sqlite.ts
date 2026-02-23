@@ -1,5 +1,5 @@
 import { TodoItem } from '../../domain/TodoItem';
-import { TodoRepository } from '../../domain/TodoRepository';
+import { SqliteRepository } from '../../domain/SqliteRepository';
 
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
@@ -105,7 +105,7 @@ async function removeItem(id: string): Promise<void> {
     });
 }
 
-const repository: TodoRepository & { init: typeof init; teardown: typeof teardown } = {
+const repository: SqliteRepository = {
     init,
     teardown,
     getItems,
