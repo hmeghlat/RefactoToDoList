@@ -3,18 +3,22 @@
 const path = require('path');
 const fs = require('fs');
 
-/**
- * Tests de non-régression structurelle.
- *
- * Ces tests garantissent que :
- *  - sqlite3 n'est jamais chargé en environnement de test
- *  - la couche persistence sélectionne InMemory quand NODE_ENV=test
- *
- * Si l'un de ces tests échoue, c'est qu'une régression architecturale
- * a été introduite (ex : ajout d'un import sqlite3 dans inMemory.ts,
- * modification de la logique de sélection dans persistence/index.ts).
- */
-describe('Architecture — pas de SQLite en environnement de test', () => {
+const SRC = path.resolve(__dirname, '../../src');
+
+function readSrc(relativePath) {
+    return fs.readFileSync(path.join(SRC, relativePath), 'utf-8');
+}
+
+function listTsFiles(dir) {
+    return fs.readdirSync(dir)
+        .filter(f => f.endsWith('.ts'))
+        .map(f => path.join(dir, f));
+}
+
+// ---------------------------------------------------------------------------
+// 1. Sélection de l'implémentation selon l'environnement
+// ---------------------------------------------------------------------------
+describe('Architecture — sélection de la persistence selon l\'environnement', () => {
     beforeEach(() => {
         jest.resetModules();
     });
@@ -39,13 +43,83 @@ describe('Architecture — pas de SQLite en environnement de test', () => {
 
         expect(sqlite3Loaded).toBe(false);
     });
+});
 
-    test('le fichier inMemory.ts ne contient aucun import de sqlite3', () => {
-        const source = fs.readFileSync(
-            path.resolve(__dirname, '../../src/backend/persistence/inMemory.ts'),
-            'utf-8',
+// ---------------------------------------------------------------------------
+// 2. Isolation de sqlite3 — seul sqlite.ts peut l'importer
+// ---------------------------------------------------------------------------
+describe('Architecture — isolation de sqlite3', () => {
+    test('seul sqlite.ts est autorisé à importer sqlite3 dans la couche persistence', () => {
+        const persistenceDir = path.join(SRC, 'backend/persistence');
+        const files = listTsFiles(persistenceDir).filter(f => !f.endsWith('sqlite.ts'));
+
+        for (const file of files) {
+            const source = fs.readFileSync(file, 'utf-8');
+            expect(source).not.toMatch(/sqlite3/, `${path.basename(file)} ne doit pas importer sqlite3`);
+        }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 3. Isolation du domaine — src/domain/ n'importe jamais depuis src/backend/
+// ---------------------------------------------------------------------------
+describe('Architecture — isolation du domaine', () => {
+    test('les fichiers src/domain/ n\'importent pas depuis src/backend/', () => {
+        const domainDir = path.join(SRC, 'domain');
+        const files = listTsFiles(domainDir);
+
+        for (const file of files) {
+            const source = fs.readFileSync(file, 'utf-8');
+            expect(source).not.toMatch(
+                /from\s+['"].*backend.*['"]/,
+                `${path.basename(file)} ne doit pas importer depuis backend`,
+            );
+        }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 4. Contrat des repositories — toute implémentation expose les méthodes requises
+// ---------------------------------------------------------------------------
+describe('Architecture — contrat des repositories', () => {
+    const REQUIRED_METHODS = [
+        'init',
+        'teardown',
+        'getItems',
+        'getItem',
+        'storeItem',
+        'updateItem',
+        'removeItem',
+    ];
+
+    beforeEach(() => {
+        jest.resetModules();
+    });
+
+    test('InMemoryRepository implémente toutes les méthodes requises', () => {
+        const repo = require('../../src/backend/persistence/inMemory');
+
+        for (const method of REQUIRED_METHODS) {
+            expect(typeof repo[method]).toBe('function');
+        }
+    });
+
+    test('toute nouvelle implémentation dans persistence/ expose les méthodes requises', () => {
+        const persistenceDir = path.join(SRC, 'backend/persistence');
+        const implFiles = listTsFiles(persistenceDir).filter(
+            f => !path.basename(f).startsWith('index'),
         );
 
-        expect(source).not.toMatch(/sqlite3/);
+        for (const file of implFiles) {
+            jest.resetModules();
+            const repo = require(file.replace(/\.ts$/, ''));
+
+            for (const method of REQUIRED_METHODS) {
+                expect(typeof repo[method]).toBe(
+                    'function',
+                    `${path.basename(file)} doit exposer la méthode "${method}"`,
+                );
+            }
+        }
     });
 });
