@@ -19,10 +19,11 @@
     "frontend:build": "cd src/frontend && npm run build"
   },
   "dependencies": {
+    "docker": "^1.0.0",
     "express": "^5.2.1",
     "mysql2": "^3.17.5",
     "sqlite3": "^5.1.7",
-    "uuid": "^13.0.0",
+    "uuid": "^9.0.1",
     "wait-port": "^1.1.0"
   },
   "resolutions": {

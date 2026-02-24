@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - SQLITE_DB_LOCATION=/etc/todos/todo.db
+    volumes:
+      - todo-db:/etc/todos
+
+volumes:
+  todo-db:
