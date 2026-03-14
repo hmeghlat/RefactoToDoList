@@ -1,0 +1,46 @@
+{
+    "name": "auth-service",
+    "version": "1.0.0",
+    "description": "service d'authentification",
+    "keywords": [
+        "auth",
+        "authentication",
+        "jwt",
+        "user",
+        "microservice",
+        "nodejs"
+    ],
+    "homepage": "https://github.com/hmeghlat/RefactoToDoList#readme",
+    "bugs": {
+        "url": "https://github.com/hmeghlat/RefactoToDoList/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/hmeghlat/RefactoToDoList.git"
+    },
+    "license": "ISC",
+    "author": "",
+    "type": "module",
+    "main": "index.ts",
+    "scripts": {
+        "start": "ts-node-esm src/index.ts",
+        "build": "tsc",
+        "test": "echo \"No test specified\""
+    },
+    "dependencies": {
+        "@types/bcrypt": "^6.0.0",
+        "@types/express": "^5.0.6",
+        "@types/jsonwebtoken": "^9.0.10",
+        "cors": "^2.8.6",
+        "dotenv": "^17.3.1",
+        "express": "^5.2.1",
+        "jsonwebtoken": "^9.0.3",
+        "mysql2": "^3.18.2"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.19",
+        "@types/node": "^25.3.2",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.9.3"
+    }
+}
