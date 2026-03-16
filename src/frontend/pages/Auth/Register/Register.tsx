@@ -1,6 +1,6 @@
 import React from 'react';
 import style from './Register.module.css';
-import { register, saveToken } from '../../../service/authService';
+import { register, saveToken, saveUser } from '../../../service/authService';
 
 const FEATURES = [
     { icon: '✓', label: 'Créez et organisez vos tâches en quelques clics' },
@@ -27,8 +27,9 @@ export default function Register({ onGoToLogin, onSuccess }: Props) {
         setLoading(true);
 
         try {
-            const { token } = await register({ firstName, lastName, email, password });
+            const { token, user } = await register({ firstName, lastName, email, password });
             saveToken(token);
+            saveUser(user);
             onSuccess();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Une erreur est survenue');

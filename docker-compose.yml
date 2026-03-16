@@ -50,8 +50,18 @@ services:
       - DB_PASSWORD=root
       - DB_NAME=projectdb
       - JWT_SECRET=supersecretkey
+      - AUTH_SERVICE_URL=http://auth-service:3000
     depends_on:
       - mysql
+
+  # Frontend (React + nginx)
+  frontend:
+    build: ./src/frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - project-service
 
 volumes:
   todo-db:

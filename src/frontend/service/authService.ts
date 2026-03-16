@@ -1,4 +1,4 @@
-const AUTH_BASE = 'http://localhost:3000/auth';
+const AUTH_BASE = '/auth';
 
 import { RegisterPayload } from '../interface/Auth/RegisterPayload';
 import { LoginPayload } from '../interface/Auth/LoginPayload';
@@ -36,6 +36,16 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
 
 export async function logout(): Promise<void> {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+}
+
+export function saveUser(user: { id: string; firstName: string; lastName: string; email: string }): void {
+    localStorage.setItem('user', JSON.stringify(user));
+}
+
+export function getUser(): { id: string; firstName: string; lastName: string; email: string } | null {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
 }
 
 export function getToken(): string | null {

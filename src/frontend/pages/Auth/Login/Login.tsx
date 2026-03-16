@@ -1,6 +1,6 @@
 import React from 'react';
 import style from './Login.module.css';
-import { login, saveToken } from '../../../service/authService';
+import { login, saveToken, saveUser } from '../../../service/authService';
 
 const FEATURES = [
     { icon: '✓', label: 'Retrouvez toutes vos tâches en un clin d\'œil' },
@@ -25,8 +25,9 @@ export default function Login({ onGoToRegister, onSuccess }: Props) {
         setLoading(true);
 
         try {
-            const { token } = await login({ email, password });
+            const { token, user } = await login({ email, password });
             saveToken(token);
+            saveUser(user);
             onSuccess();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Une erreur est survenue');
