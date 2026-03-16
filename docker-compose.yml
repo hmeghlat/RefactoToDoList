@@ -1,13 +1,58 @@
 services:
+  # Ancien backend (SQLite)
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - PORT=3000
       - SQLITE_DB_LOCATION=/etc/todos/todo.db
     volumes:
       - todo-db:/etc/todos
 
+  # MySQL pour les microservices
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: authdb
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # Auth service
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=authdb
+      - JWT_SECRET=supersecretkey
+      - JWT_EXPIRES_IN=1h
+    depends_on:
+      - mysql
+
+  # Project service
+  project-service:
+    build: ./project-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=projectdb
+      - JWT_SECRET=supersecretkey
+    depends_on:
+      - mysql
+
 volumes:
   todo-db:
+  mysql-data:

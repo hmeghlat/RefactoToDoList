@@ -1,0 +1,224 @@
+/* ── Layout pleine page ─────────────────────────────────────────── */
+.page {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 480px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ── Panneau gauche ─────────────────────────────────────────────── */
+.left {
+    background-color: #191970;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px 64px;
+    overflow: hidden;
+    position: relative;
+}
+
+.brand {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ECEFF1;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+}
+
+.leftBody {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.headline {
+    font-family: 'Crimson Pro', serif;
+    font-size: 3.2rem;
+    font-weight: 600;
+    color: #ECEFF1;
+    line-height: 1.15;
+    margin: 0;
+}
+
+.tagline {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: rgba(236, 239, 241, 0.6);
+    margin: 0;
+    max-width: 380px;
+}
+
+.features {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: rgba(236, 239, 241, 0.8);
+    font-size: 0.9rem;
+}
+
+.featureIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: rgba(236, 239, 241, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+.footer {
+    font-size: 0.78rem;
+    color: rgba(236, 239, 241, 0.3);
+}
+
+/* Décoration */
+.decoCircle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(236, 239, 241, 0.07);
+    pointer-events: none;
+}
+
+/* ── Panneau droit ──────────────────────────────────────────────── */
+.right {
+    background-color: #ECEFF1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+}
+
+.card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(25, 25, 112, 0.1);
+    padding: 44px 36px;
+    width: 100%;
+}
+
+.cardTitle {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.9rem;
+    font-weight: 600;
+    color: #191970;
+    margin: 0 0 4px 0;
+    text-align: center;
+}
+
+.cardSubtitle {
+    font-size: 0.85rem;
+    color: #6b7280;
+    text-align: center;
+    margin: 0 0 28px 0;
+}
+
+/* ── Formulaire ─────────────────────────────────────────────────── */
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #191970;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.input {
+    padding: 11px 14px;
+    font-size: 0.92rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    color: #191970;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.input:focus {
+    border-color: #191970;
+    box-shadow: 0 0 0 3px rgba(25, 25, 112, 0.08);
+    background-color: #ffffff;
+}
+
+.input::placeholder {
+    color: #9ca3af;
+}
+
+.button {
+    width: 100%;
+    padding: 13px;
+    background-color: #191970;
+    color: #ECEFF1;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background-color 0.2s;
+}
+
+.button:hover {
+    background-color: #14145a;
+}
+
+.loginLink {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.link {
+    color: #191970;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.error {
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+}
+
+.inputError {
+    border-color: #f87171 !important;
+}
+
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

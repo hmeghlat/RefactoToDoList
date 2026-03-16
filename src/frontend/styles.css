@@ -1,39 +1,178 @@
-body {
-    background-color: #f4f4f4;
-    margin-top: 50px;
-    font-family: 'Lato';
+/* ─── Google Fonts ──────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+
+/* ─── Variables ─────────────────────────────────────────────────────────────── */
+:root {
+    --mist-gray:    #ECEFF1;
+    --midnight:     #191970;
+    --midnight-light: #2a2a9e;
+    --white:        #ffffff;
+    --text-muted:   #6b7280;
+    --border:       #d1d5db;
+    --danger:       #e53e3e;
+    --shadow-sm:    0 2px 8px rgba(25, 25, 112, 0.08);
+    --shadow-md:    0 4px 24px rgba(25, 25, 112, 0.12);
+    --radius:       10px;
 }
 
+/* ─── Reset & Base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--mist-gray);
+    margin: 0;
+    padding: 40px 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.95rem;
+    color: #1f2937;
+    min-height: 100vh;
+}
+
+/* ─── App title ─────────────────────────────────────────────────────────────── */
+h1, h2, h3 {
+    font-family: 'Crimson Pro', serif;
+    color: var(--midnight);
+}
+
+/* ─── Main container card ───────────────────────────────────────────────────── */
+.container {
+    max-width: 640px !important;
+}
+
+/* ─── Todo list wrapper ─────────────────────────────────────────────────────── */
+.todo-wrapper {
+    background-color: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 32px 28px;
+}
+
+.todo-wrapper h1 {
+    font-size: 1.9rem;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--mist-gray);
+    padding-bottom: 12px;
+}
+
+/* ─── Add Item Form ─────────────────────────────────────────────────────────── */
+.input-group {
+    margin-bottom: 24px;
+}
+
+.input-group .form-control {
+    background-color: var(--mist-gray);
+    border: 1.5px solid var(--border);
+    border-right: none;
+    border-radius: var(--radius) 0 0 var(--radius) !important;
+    padding: 10px 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--midnight);
+    outline: none;
+    box-shadow: none;
+}
+
+.input-group .form-control:focus {
+    border-color: var(--midnight);
+    box-shadow: none;
+    background-color: var(--white);
+}
+
+.input-group .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+.input-group .btn-success {
+    background-color: var(--midnight);
+    border-color: var(--midnight);
+    border-radius: 0 var(--radius) var(--radius) 0 !important;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    padding: 10px 20px;
+    transition: background-color 0.2s;
+}
+
+.input-group .btn-success:hover:not(:disabled) {
+    background-color: var(--midnight-light);
+    border-color: var(--midnight-light);
+}
+
+.input-group .btn-success:disabled {
+    background-color: var(--border);
+    border-color: var(--border);
+    cursor: not-allowed;
+}
+
+/* ─── Todo Items ─────────────────────────────────────────────────────────────── */
 .item {
-    background-color: white;
-    padding: 15px;
-    margin-bottom: 15px;
-    border: transparent;
-    border-radius: 5px;
-    box-shadow: 0 0 1em #ccc;
-    transition: all .2s ease-in-out;
+    background-color: var(--white);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .item:hover {
-    box-shadow: 0 0 1em #aaa;
+    box-shadow: var(--shadow-md);
+    border-color: var(--midnight);
 }
 
 .item.completed {
-    text-decoration: line-through;
+    opacity: 0.55;
+    border-color: var(--border);
 }
 
+.item.completed .name {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+/* ─── Item controls ─────────────────────────────────────────────────────────── */
 .toggles {
-    color: black;
+    color: var(--midnight) !important;
+    padding: 0;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+
+.toggles:hover {
+    opacity: 1;
 }
 
 .name {
-    padding-top: 3px;
+    padding-top: 4px;
+    font-weight: 500;
+    color: #1f2937;
 }
 
 .remove {
     padding-left: 0;
 }
 
-button:focus {
-    border: 1px solid #333;
+.remove .btn-link {
+    color: var(--danger) !important;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+
+.remove .btn-link:hover {
+    opacity: 1;
+}
+
+/* ─── Empty & loading states ─────────────────────────────────────────────────── */
+.text-center {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-top: 16px;
+}
+
+/* ─── Focus states ───────────────────────────────────────────────────────────── */
+button:focus-visible {
+    outline: 2px solid var(--midnight);
+    outline-offset: 2px;
 }
