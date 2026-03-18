@@ -19,13 +19,23 @@ export type TaskReopenedEvent = {
   };
 };
 
-export type DomainEvent = TaskCompletedEvent | TaskReopenedEvent;
+export type TaskCreatedEvent = {
+  type: "TaskCreated";
+  occurredAt: string;
+  data: {
+    taskId: TaskId;
+    projectId: ProjectId;
+  };
+};
 
-export const eventRoutingKey = (event: DomainEvent): string => {
+export type DomainEvent = TaskCompletedEvent | TaskReopenedEvent | TaskCreatedEvent;
+
   switch (event.type) {
     case "TaskCompleted":
       return "task.completed";
     case "TaskReopened":
       return "task.reopened";
+    case "TaskCreated":
+      return "task.created";
   }
 };

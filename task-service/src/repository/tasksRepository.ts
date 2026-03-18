@@ -8,9 +8,9 @@ type TaskRowPacket = RowDataPacket & TaskRow;
 export const createTasksRepository = (db: Connection) => {
   const create = async (input: {
     projectId: number;
-    title: string;
+    userId: number;
+    name: string;
     description?: string | null;
-    assigneeUserId?: number | null;
     priority?: TaskPriority;
     status?: TaskStatus;
     dueDate?: Date | null;
@@ -18,12 +18,12 @@ export const createTasksRepository = (db: Connection) => {
     const [result] = await db
       .promise()
       .execute<ResultSetHeader>(
-        "INSERT INTO tasks (project_id, title, description, assignee_user_id, priority, status, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO tasks (project_id, user_id, name, description, priority, status, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
           input.projectId,
-          input.title,
+          input.userId,
+          input.name,
           input.description ?? null,
-          input.assigneeUserId ?? null,
           input.priority ?? "MEDIUM",
           input.status ?? "TODO",
           input.dueDate ?? null,
@@ -39,7 +39,7 @@ export const createTasksRepository = (db: Connection) => {
     const [rows] = await db
       .promise()
       .query<TaskRowPacket[]>(
-        "SELECT id, project_id, title, description, assignee_user_id, priority, status, due_date, created_at, updated_at FROM tasks WHERE id = ? LIMIT 1",
+        "SELECT id, project_id, user_id, name, description, priority, status, due_date, created_at, updated_at FROM tasks WHERE id = ? LIMIT 1",
         [id]
       );
 
@@ -52,7 +52,7 @@ export const createTasksRepository = (db: Connection) => {
       const [rows] = await db
         .promise()
         .query<TaskRowPacket[]>(
-          "SELECT id, project_id, title, description, assignee_user_id, priority, status, due_date, created_at, updated_at FROM tasks WHERE project_id = ? ORDER BY id ASC",
+          "SELECT id, project_id, user_id, name, description, priority, status, due_date, created_at, updated_at FROM tasks WHERE project_id = ? ORDER BY id ASC",
           [filter.projectId]
         );
       return rows.map(toTask);
@@ -61,7 +61,7 @@ export const createTasksRepository = (db: Connection) => {
     const [rows] = await db
       .promise()
       .query<TaskRowPacket[]>(
-        "SELECT id, project_id, title, description, assignee_user_id, priority, status, due_date, created_at, updated_at FROM tasks ORDER BY id ASC"
+        "SELECT id, project_id, user_id, name, description, priority, status, due_date, created_at, updated_at FROM tasks ORDER BY id ASC"
       );
     return rows.map(toTask);
   };
