@@ -1,68 +1,116 @@
 services:
-  # Ancien backend (SQLite)
-  app:
-    build: .
+  rabbitmq:
+    image: rabbitmq:3-management
     ports:
-      - "3001:3000"
-    environment:
-      - PORT=3000
-      - SQLITE_DB_LOCATION=/etc/todos/todo.db
-    volumes:
-      - todo-db:/etc/todos
+      - "5672:5672"
+      - "15672:15672"
 
-  # MySQL pour les microservices
-  mysql:
+  mysql-auth:
     image: mysql:8.0
-    ports:
-      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: authdb
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=authdb
+      - MYSQL_USER=auth_user
+      - MYSQL_PASSWORD=root
+    ports:
+      - "3307:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql-auth-data:/var/lib/mysql
+      - ./auth-service/sql/schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
 
-  # Auth service
+  mysql-project:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=projectdb
+      - MYSQL_USER=project_user
+      - MYSQL_PASSWORD=root
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-project-data:/var/lib/mysql
+      - ./projetct-service/sql/migrations/schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+
+  mysql-task:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=taskdb
+      - MYSQL_USER=task_user
+      - MYSQL_PASSWORD=root
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql-task-data:/var/lib/mysql
+      - ./task-service/sql/schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+
   auth-service:
-    build: ./auth-service
+    build:
+      context: ./auth-service
     ports:
       - "3000:3000"
     environment:
       - PORT=3000
-      - DB_HOST=mysql
-      - DB_USER=root
+      - JWT_SECRET=5508b0990abb17908b988d35784e9a580dc9133c1e52171e70866f5e570f3932
+      - JWT_EXPIRES_IN=1h
+      - DB_HOST=mysql-auth
+      - DB_USER=auth_user
       - DB_PASSWORD=root
       - DB_NAME=authdb
-      - JWT_SECRET=supersecretkey
-      - JWT_EXPIRES_IN=1h
     depends_on:
-      - mysql
+      - rabbitmq
+      - mysql-auth
 
-  # Project service
-  project-service:
-    build: ./project-service
+  projetct-service:
+    build:
+      context: ./projetct-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - AUTH_SERVICE_URL=http://auth-service:3000
+      - TASK_SERVICE_URL=http://task-service:3002
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - DB_HOST=mysql-project
+      - DB_USER=project_user
+      - DB_PASSWORD=root
+      - DB_NAME=projectdb
+    depends_on:
+      - rabbitmq
+      - auth-service
+      - mysql-project
+
+  task-service:
+    build:
+      context: ./task-service
     ports:
       - "3002:3002"
     environment:
       - PORT=3002
-      - DB_HOST=mysql
-      - DB_USER=root
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - DB_HOST=mysql-task
+      - DB_USER=task_user
       - DB_PASSWORD=root
-      - DB_NAME=projectdb
-      - JWT_SECRET=supersecretkey
-      - AUTH_SERVICE_URL=http://auth-service:3000
+      - DB_NAME=taskdb
     depends_on:
-      - mysql
+      - rabbitmq
+      - mysql-task
 
-  # Frontend (React + nginx)
-  frontend:
-    build: ./src/frontend
+  notification-service:
+    build:
+      context: ./notification-service
     ports:
-      - "80:80"
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - RABBITMQ_URL=amqp://rabbitmq:5672
     depends_on:
-      - auth-service
-      - project-service
+      - rabbitmq
 
 volumes:
-  todo-db:
-  mysql-data:
+  mysql-auth-data:
+  mysql-project-data:
+  mysql-task-data:
