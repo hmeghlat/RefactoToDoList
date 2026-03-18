@@ -7,8 +7,8 @@ import { safeJson, subscribe } from "./rabbitmq.js";
 type TaskFromApi = {
   id: number;
   projectId: number;
-  name: string;
-  completed: boolean;
+  title: string;
+  status: "TODO" | "IN_PROGRESS" | "DONE" | "CANCELLED";
 };
 
 type ProjectRowPacket = RowDataPacket & {
@@ -87,7 +87,7 @@ export const startTaskEventsConsumer = async (params: {
       const tasks = await fetchTasksForProject(projectId);
       if (tasks.length === 0) return;
 
-      const allDone = tasks.every((t) => t.completed);
+      const allDone = tasks.every((t) => t.status === "DONE");
       if (!allDone) {
         if (project.status === "NOT_STARTED" || project.status === "PENDING") {
           await setProjectStatus(db, projectId, "IN_PROGRESS");

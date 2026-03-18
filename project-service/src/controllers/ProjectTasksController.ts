@@ -29,8 +29,8 @@ const getTaskServiceUrl = (): string => {
 type TaskFromApi = {
   id: number;
   projectId: number;
-  name: string;
-  completed: boolean;
+  title: string;
+  status: "TODO" | "IN_PROGRESS" | "DONE" | "CANCELLED";
 };
 
 export const createProjectTasksController = (db: Connection) => {
@@ -38,10 +38,11 @@ export const createProjectTasksController = (db: Connection) => {
     try {
       const projectId = parsePositiveInt(req.params.id);
       const body = (req.body ?? {}) as Record<string, unknown>;
-      const name = isNonEmptyString(body.name) ? body.name.trim() : "";
+      const title =
+        isNonEmptyString(body.title) ? body.title.trim() : isNonEmptyString(body.name) ? body.name.trim() : "";
 
-      if (!projectId || !name) {
-        res.status(400).json({ message: "Invalid project id or name" });
+      if (!projectId || !title) {
+        res.status(400).json({ message: "Invalid project id or title" });
         return;
       }
 
@@ -51,7 +52,7 @@ export const createProjectTasksController = (db: Connection) => {
           accept: "application/json",
           "content-type": "application/json",
         },
-        body: JSON.stringify({ projectId, name }),
+        body: JSON.stringify({ projectId, title }),
       });
 
       if (!response.ok) {
