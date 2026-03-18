@@ -15,6 +15,10 @@ app.use(express.json());
 app.use(express.urlencoded({extended :false}));
 app.use(cors());
 
+app.get("/health", (_req, res) => {
+	res.status(200).json({ status: "ok" });
+});
+
 app.use("/auth", createAuthRouter(db));
 
 app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
