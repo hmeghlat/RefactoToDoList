@@ -1,7 +1,7 @@
 import { connect, type Channel } from "amqplib";
 
 import type { DomainEvent } from "./events.js";
-import { eventRoutingKey } from "./events.js";
+import { getRoutingKey as eventRoutingKey } from "./events.js";
 
 const EXCHANGE = "events";
 

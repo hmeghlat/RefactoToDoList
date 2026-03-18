@@ -1,5 +1,5 @@
 import { Router } from "express";
-import type { Connection } from "mysql2";
+import type { Pool as Connection } from "mysql2";
 
 import { createAuthController } from "../controllers/authController.js";
 import { requireAuth } from "../middleware/requireAuth.js";

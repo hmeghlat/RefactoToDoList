@@ -5,6 +5,7 @@ import { getAllProjects, createProject, type Project, type CreateProjectPayload,
 
 interface Props {
     onLogout: () => void;
+    onOpenProject: (project: Project) => void;
 }
 
 const STATUS_LABELS: Record<ProjectStatus, string> = {
@@ -30,7 +31,7 @@ const EMPTY_FORM: CreateProjectPayload = {
     status: 'NOT_STARTED',
 };
 
-export default function Home({ onLogout }: Props) {
+export default function Home({ onLogout, onOpenProject }: Props) {
     const user = getUser();
     const [projects, setProjects] = React.useState<Project[]>([]);
     const [loading, setLoading] = React.useState(true);
@@ -134,7 +135,7 @@ export default function Home({ onLogout }: Props) {
                 ) : (
                     <div className={style.grid}>
                         {projects.map(p => (
-                            <div key={p.id} className={style.card}>
+                            <div key={p.id} className={style.card} onClick={() => onOpenProject(p)} style={{ cursor: 'pointer' }}>
                                 <div className={style.cardHeader}>
                                     <h2 className={style.cardName}>{p.name}</h2>
                                     <span className={`${style.badge} ${style[`badge_${p.status}`]}`}>

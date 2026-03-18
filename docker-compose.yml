@@ -31,7 +31,7 @@ services:
       - "3308:3306"
     volumes:
       - mysql-project-data:/var/lib/mysql
-      - ./projetct-service/sql/migrations/schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+      - ./project-service/sql/migrations/schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
 
   mysql-task:
     image: mysql:8.0
@@ -64,9 +64,9 @@ services:
       - rabbitmq
       - mysql-auth
 
-  projetct-service:
+  project-service:
     build:
-      context: ./projetct-service
+      context: ./project-service
     ports:
       - "3001:3001"
     environment:

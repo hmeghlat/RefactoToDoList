@@ -30,6 +30,7 @@ export type TaskCreatedEvent = {
 
 export type DomainEvent = TaskCompletedEvent | TaskReopenedEvent | TaskCreatedEvent;
 
+export const getRoutingKey = (event: DomainEvent): string => {
   switch (event.type) {
     case "TaskCompleted":
       return "task.completed";

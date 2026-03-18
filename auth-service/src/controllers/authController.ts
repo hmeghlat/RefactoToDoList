@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import type { Connection, ResultSetHeader, RowDataPacket } from "mysql2";
+import type { Pool as Connection, ResultSetHeader, RowDataPacket } from "mysql2";
 import bcrypt from "bcrypt";
 import jwt, { type Secret, type SignOptions } from "jsonwebtoken";
 
