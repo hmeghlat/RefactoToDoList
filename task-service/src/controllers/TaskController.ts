@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 
+import type { TaskPriority, TaskStatus } from "../models/task.js";
 import type { RabbitClient } from "../messaging/rabbitmq.js";
 import type { TasksRepository } from "../repository/tasksRepository.js";
 
@@ -23,6 +24,26 @@ const parsePositiveInt = (value: unknown): number | null => {
   return null;
 };
 
+const isTaskPriority = (value: unknown): value is TaskPriority =>
+  value === "LOW" || value === "MEDIUM" || value === "HIGH";
+
+const isTaskStatus = (value: unknown): value is TaskStatus =>
+  value === "TODO" || value === "IN_PROGRESS" || value === "DONE" || value === "CANCELLED";
+
+const parseNullableDate = (value: unknown): Date | null | undefined => {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) return undefined;
+    return parsed;
+  }
+  return undefined;
+};
+
 export const createTaskController = (params: { repo: TasksRepository; rabbit: RabbitClient }) => {
   const { repo, rabbit } = params;
 
@@ -41,14 +62,53 @@ export const createTaskController = (params: { repo: TasksRepository; rabbit: Ra
     try {
       const body = (req.body ?? {}) as Record<string, unknown>;
       const projectId = parsePositiveInt(body.projectId);
-      const name = isNonEmptyString(body.name) ? body.name.trim() : "";
+      const title =
+        isNonEmptyString(body.title) ? body.title.trim() : isNonEmptyString(body.name) ? body.name.trim() : "";
+      const description = body.description === undefined ? undefined : body.description === null ? null : String(body.description);
+      const assigneeUserId =
+        body.assigneeUserId === undefined
+          ? undefined
+          : body.assigneeUserId === null
+            ? null
+            : parsePositiveInt(body.assigneeUserId);
+      const priority = body.priority !== undefined ? (isTaskPriority(body.priority) ? body.priority : null) : undefined;
+      const status = body.status !== undefined ? (isTaskStatus(body.status) ? body.status : null) : undefined;
+      const dueDate = parseNullableDate(body.dueDate);
 
-      if (!projectId || !name) {
-        res.status(400).json({ message: "projectId and name are required" });
+      if (!projectId || !title) {
+        res.status(400).json({ message: "projectId and title are required" });
         return;
       }
 
-      const task = await repo.create({ projectId, name });
+      if (body.assigneeUserId !== undefined && assigneeUserId === null) {
+        // explicit null is allowed
+      } else if (body.assigneeUserId !== undefined && !assigneeUserId) {
+        res.status(400).json({ message: "assigneeUserId must be a positive integer or null" });
+        return;
+      }
+      if (priority === null) {
+        res.status(400).json({ message: "priority must be one of LOW|MEDIUM|HIGH" });
+        return;
+      }
+      if (status === null) {
+        res.status(400).json({ message: "status must be one of TODO|IN_PROGRESS|DONE|CANCELLED" });
+        return;
+      }
+
+      if (body.dueDate !== undefined && dueDate === undefined) {
+        res.status(400).json({ message: "dueDate must be an ISO date string (YYYY-MM-DD) or null" });
+        return;
+      }
+
+      const task = await repo.create({
+        projectId,
+        title,
+        description: description ?? null,
+        assigneeUserId: assigneeUserId ?? null,
+        ...(priority !== undefined ? { priority } : {}),
+        ...(status !== undefined ? { status } : {}),
+        dueDate: dueDate ?? null,
+      });
       res.status(201).json({ task });
     } catch (error) {
       console.error("createTask error:", error);
@@ -86,17 +146,56 @@ export const createTaskController = (params: { repo: TasksRepository; rabbit: Ra
       }
 
       const body = (req.body ?? {}) as Record<string, unknown>;
-      const name = body.name !== undefined ? (isNonEmptyString(body.name) ? body.name.trim() : "") : undefined;
-      const completed = body.completed !== undefined ? Boolean(body.completed) : undefined;
+      const title =
+        body.title !== undefined
+          ? isNonEmptyString(body.title)
+            ? body.title.trim()
+            : ""
+          : body.name !== undefined
+            ? isNonEmptyString(body.name)
+              ? body.name.trim()
+              : ""
+            : undefined;
+      const description =
+        body.description !== undefined ? (body.description === null ? null : String(body.description)) : undefined;
+      const assigneeUserId =
+        body.assigneeUserId === undefined
+          ? undefined
+          : body.assigneeUserId === null
+            ? null
+            : parsePositiveInt(body.assigneeUserId);
+      const priority = body.priority !== undefined ? (isTaskPriority(body.priority) ? body.priority : null) : undefined;
+      const status = body.status !== undefined ? (isTaskStatus(body.status) ? body.status : null) : undefined;
+      const dueDate = parseNullableDate(body.dueDate);
 
-      if (name !== undefined && !name) {
-        res.status(400).json({ message: "name cannot be empty" });
+      if (title !== undefined && !title) {
+        res.status(400).json({ message: "title cannot be empty" });
+        return;
+      }
+      if (body.assigneeUserId !== undefined && assigneeUserId === undefined) {
+        res.status(400).json({ message: "assigneeUserId must be a positive integer or null" });
+        return;
+      }
+      if (priority === null) {
+        res.status(400).json({ message: "priority must be one of LOW|MEDIUM|HIGH" });
+        return;
+      }
+      if (status === null) {
+        res.status(400).json({ message: "status must be one of TODO|IN_PROGRESS|DONE|CANCELLED" });
+        return;
+      }
+      if (body.dueDate !== undefined && dueDate === undefined) {
+        res.status(400).json({ message: "dueDate must be an ISO date string (YYYY-MM-DD) or null" });
         return;
       }
 
       const result = await repo.update(id, {
-        ...(name !== undefined ? { name } : {}),
-        ...(completed !== undefined ? { completed } : {}),
+        ...(title !== undefined ? { title } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(assigneeUserId !== undefined ? { assigneeUserId } : {}),
+        ...(priority !== undefined ? { priority } : {}),
+        ...(status !== undefined ? { status } : {}),
+        ...(dueDate !== undefined ? { dueDate } : {}),
       });
 
       if (!result) {
@@ -105,14 +204,14 @@ export const createTaskController = (params: { repo: TasksRepository; rabbit: Ra
       }
 
       const { before, after } = result;
-      if (before.completed !== after.completed) {
-        if (after.completed) {
+      if (before.status !== after.status) {
+        if (before.status !== "DONE" && after.status === "DONE") {
           rabbit.publishEvent({
             type: "TaskCompleted",
             occurredAt: new Date().toISOString(),
             data: { taskId: after.id, projectId: after.projectId },
           });
-        } else {
+        } else if (before.status === "DONE" && after.status !== "DONE") {
           rabbit.publishEvent({
             type: "TaskReopened",
             occurredAt: new Date().toISOString(),
