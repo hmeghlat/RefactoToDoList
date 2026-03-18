@@ -8,9 +8,9 @@ export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE" | "CANCELLED";
 export type Task = {
   id: TaskId;
   projectId: ProjectId;
+  userId: UserId;
   name: string;
   description: string | null;
-  userId: UserId | null;
   priority: TaskPriority;
   status: TaskStatus;
   dueDate: Date | null;
@@ -21,9 +21,9 @@ export type Task = {
 export type TaskRow = {
   id: number;
   project_id: number;
+  user_id: number;
   name: string;
   description: string | null;
-  user_id: number | null;
   priority: TaskPriority;
   status: TaskStatus;
   due_date: Date | string | null;
@@ -41,9 +41,9 @@ const toNullableDate = (value: Date | string | null): Date | null => {
 export const toTask = (row: TaskRow): Task => ({
   id: Number(row.id),
   projectId: Number(row.project_id),
+  userId: Number(row.user_id),
   name: row.name,
   description: row.description,
-  userId: row.user_id === null ? null : Number(row.user_id),
   priority: row.priority,
   status: row.status,
   dueDate: toNullableDate(row.due_date),

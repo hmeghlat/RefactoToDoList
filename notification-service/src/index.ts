@@ -20,7 +20,7 @@ const { connection, channel } = await connectRabbit();
 
 await subscribe({
   channel,
-  routingKeys: ["project.completed", "task.reopened"],
+  routingKeys: ["project.completed", "task.reopened", "task.completed", "task.created"],
   onMessage: (msg) => {
     const payload = safeJson(msg);
     const routingKey = msg.fields.routingKey;
@@ -32,6 +32,16 @@ await subscribe({
 
     if (routingKey === "task.reopened") {
       console.log("[NOTIF] Tâche réouverte:", payload);
+      return;
+    }
+
+    if (routingKey === "task.completed") {
+      console.log("[NOTIF] Tâche complétée:", payload);
+      return;
+    }
+
+    if (routingKey === "task.created") {
+      console.log("[NOTIF] Tâche créée:", payload);
       return;
     }
 

@@ -62,28 +62,15 @@ export const createTaskController = (params: { repo: TasksRepository; rabbit: Ra
     try {
       const body = (req.body ?? {}) as Record<string, unknown>;
       const projectId = parsePositiveInt(body.projectId);
-      const title =
-        isNonEmptyString(body.title) ? body.title.trim() : isNonEmptyString(body.name) ? body.name.trim() : "";
+      const userId = parsePositiveInt(body.userId);
+      const name = isNonEmptyString(body.name) ? body.name.trim() : "";
       const description = body.description === undefined ? undefined : body.description === null ? null : String(body.description);
-      const assigneeUserId =
-        body.assigneeUserId === undefined
-          ? undefined
-          : body.assigneeUserId === null
-            ? null
-            : parsePositiveInt(body.assigneeUserId);
       const priority = body.priority !== undefined ? (isTaskPriority(body.priority) ? body.priority : null) : undefined;
       const status = body.status !== undefined ? (isTaskStatus(body.status) ? body.status : null) : undefined;
       const dueDate = parseNullableDate(body.dueDate);
 
-      if (!projectId || !title) {
-        res.status(400).json({ message: "projectId and title are required" });
-        return;
-      }
-
-      if (body.assigneeUserId !== undefined && assigneeUserId === null) {
-        // explicit null is allowed
-      } else if (body.assigneeUserId !== undefined && !assigneeUserId) {
-        res.status(400).json({ message: "assigneeUserId must be a positive integer or null" });
+      if (!projectId || !userId || !name) {
+        res.status(400).json({ message: "projectId, userId, and name are required" });
         return;
       }
       if (priority === null) {
@@ -94,7 +81,6 @@ export const createTaskController = (params: { repo: TasksRepository; rabbit: Ra
         res.status(400).json({ message: "status must be one of TODO|IN_PROGRESS|DONE|CANCELLED" });
         return;
       }
-
       if (body.dueDate !== undefined && dueDate === undefined) {
         res.status(400).json({ message: "dueDate must be an ISO date string (YYYY-MM-DD) or null" });
         return;
@@ -102,13 +88,20 @@ export const createTaskController = (params: { repo: TasksRepository; rabbit: Ra
 
       const task = await repo.create({
         projectId,
-        title,
+        userId,
+        name,
         description: description ?? null,
-        assigneeUserId: assigneeUserId ?? null,
         ...(priority !== undefined ? { priority } : {}),
         ...(status !== undefined ? { status } : {}),
         dueDate: dueDate ?? null,
       });
+
+      rabbit.publishEvent({
+        type: "TaskCreated",
+        occurredAt: new Date().toISOString(),
+        data: { taskId: task.id, projectId: task.projectId },
+      });
+
       res.status(201).json({ task });
     } catch (error) {
       console.error("createTask error:", error);
@@ -146,34 +139,28 @@ export const createTaskController = (params: { repo: TasksRepository; rabbit: Ra
       }
 
       const body = (req.body ?? {}) as Record<string, unknown>;
-      const title =
-        body.title !== undefined
-          ? isNonEmptyString(body.title)
-            ? body.title.trim()
+      const name =
+        body.name !== undefined
+          ? isNonEmptyString(body.name)
+            ? body.name.trim()
             : ""
-          : body.name !== undefined
-            ? isNonEmptyString(body.name)
-              ? body.name.trim()
-              : ""
-            : undefined;
+          : undefined;
       const description =
         body.description !== undefined ? (body.description === null ? null : String(body.description)) : undefined;
-      const assigneeUserId =
-        body.assigneeUserId === undefined
-          ? undefined
-          : body.assigneeUserId === null
-            ? null
-            : parsePositiveInt(body.assigneeUserId);
+      const userId =
+        body.userId !== undefined
+          ? parsePositiveInt(body.userId)
+          : undefined;
       const priority = body.priority !== undefined ? (isTaskPriority(body.priority) ? body.priority : null) : undefined;
       const status = body.status !== undefined ? (isTaskStatus(body.status) ? body.status : null) : undefined;
       const dueDate = parseNullableDate(body.dueDate);
 
-      if (title !== undefined && !title) {
-        res.status(400).json({ message: "title cannot be empty" });
+      if (name !== undefined && !name) {
+        res.status(400).json({ message: "name cannot be empty" });
         return;
       }
-      if (body.assigneeUserId !== undefined && assigneeUserId === undefined) {
-        res.status(400).json({ message: "assigneeUserId must be a positive integer or null" });
+      if (body.userId !== undefined && userId === undefined) {
+        res.status(400).json({ message: "userId must be a positive integer" });
         return;
       }
       if (priority === null) {
@@ -190,9 +177,9 @@ export const createTaskController = (params: { repo: TasksRepository; rabbit: Ra
       }
 
       const result = await repo.update(id, {
-        ...(title !== undefined ? { title } : {}),
+        ...(name !== undefined ? { name } : {}),
         ...(description !== undefined ? { description } : {}),
-        ...(assigneeUserId !== undefined ? { assigneeUserId } : {}),
+        ...(userId !== undefined && userId !== null ? { userId } : {}),
         ...(priority !== undefined ? { priority } : {}),
         ...(status !== undefined ? { status } : {}),
         ...(dueDate !== undefined ? { dueDate } : {}),
