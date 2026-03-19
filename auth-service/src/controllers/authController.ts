@@ -28,6 +28,12 @@ export const createAuthController = (db: Connection) => {
 		const firstName = body.firstName.trim();
 		const lastName = body.lastName.trim();
 
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(email)) {
+			res.status(400).json({ message: "Invalid email format" });
+			return;
+		}
+
 		// Vérification robustesse du mot de passe
 		const passwordValid =
 			password.length >= 8 &&
