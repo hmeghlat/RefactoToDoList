@@ -1,39 +1,12 @@
 import { getToken } from './authService';
+import type { Project } from '../interface/Project/Project';
+import type { ProjectStatus } from '../interface/Project/ProjectStatus';
+import type { CreateProjectPayload } from '../interface/Project/CreateProjectPayload';
+import type { UpdateProjectPayload } from '../interface/Project/UpdateProjectPayload';
+
+export type { Project, ProjectStatus, CreateProjectPayload, UpdateProjectPayload };
 
 const PROJECT_BASE = '/projects';
-
-export type ProjectStatus = 'NOT_STARTED' | 'PENDING' | 'IN_PROGRESS' | 'DONE';
-
-export interface Project {
-    id: number;
-    ownerUserId: number;
-    name: string;
-    description: string | null;
-    startDate: string | null;
-    dueDate: string | null;
-    budget: number;
-    status: ProjectStatus;
-    createdAt: string;
-    updatedAt: string;
-}
-
-export interface CreateProjectPayload {
-    name: string;
-    description?: string;
-    startDate?: string;
-    dueDate?: string;
-    budget?: number;
-    status?: ProjectStatus;
-}
-
-export interface UpdateProjectPayload {
-    name?: string;
-    description?: string;
-    startDate?: string | null;
-    dueDate?: string | null;
-    budget?: number;
-    status?: ProjectStatus;
-}
 
 function authHeaders() {
     return {

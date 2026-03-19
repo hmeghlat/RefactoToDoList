@@ -1,40 +1,13 @@
 import { getToken } from './authService';
+import type { Task } from '../interface/Task/Task';
+import type { TaskStatus } from '../interface/Task/TaskStatus';
+import type { TaskPriority } from '../interface/Task/TaskPriority';
+import type { CreateTaskPayload } from '../interface/Task/CreateTaskPayload';
+import type { UpdateTaskPayload } from '../interface/Task/UpdateTaskPayload';
+
+export type { Task, TaskStatus, TaskPriority, CreateTaskPayload, UpdateTaskPayload };
 
 const TASK_BASE = '/tasks';
-
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
-export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH';
-
-export interface Task {
-    id: number;
-    projectId: number;
-    userId: number;
-    name: string;
-    description: string | null;
-    priority: TaskPriority;
-    status: TaskStatus;
-    dueDate: string | null;
-    createdAt: string;
-    updatedAt: string;
-}
-
-export interface CreateTaskPayload {
-    projectId: number;
-    userId: number;
-    name: string;
-    description?: string;
-    priority?: TaskPriority;
-    status?: TaskStatus;
-    dueDate?: string | null;
-}
-
-export interface UpdateTaskPayload {
-    name?: string;
-    description?: string;
-    priority?: TaskPriority;
-    status?: TaskStatus;
-    dueDate?: string | null;
-}
 
 function authHeaders() {
     return {
