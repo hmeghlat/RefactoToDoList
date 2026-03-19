@@ -240,7 +240,7 @@ export const deleteProjectController = (db: Connection) => {
                 tasks.length === 0 ||
                 tasks.every((t: any) => t.status === 'DONE');
             const forceDelete =
-                req.query.force === 'true' || req.body.force === true;
+                req.query.force === 'true' || (req.body as Record<string, unknown> | undefined)?.force === true;
 
             if (!allDone && !forceDelete) {
                 res.status(409).json({

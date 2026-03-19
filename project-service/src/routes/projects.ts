@@ -1,4 +1,5 @@
 import express from "express";
+import type { RequestHandler } from "express";
 import type { Connection } from "mysql2";
 
 import {
@@ -13,7 +14,7 @@ import { createProjectTasksController } from "../controllers/ProjectTasksControl
 
 import { requireAuthViaAuthService } from "../middleware/requireAuthViaAuthService.js";
 
-export const ProjectsRouter = (db: Connection) => {
+export const ProjectsRouter = (db: Connection, authMiddlewareOverride?: RequestHandler) => {
 	const router = express.Router();
 	const createController = createProjectController(db);
 	const getController = getProjectController(db);
@@ -22,7 +23,7 @@ export const ProjectsRouter = (db: Connection) => {
 	const deleteController = deleteProjectController(db);
 	const tasksController = createProjectTasksController(db);
 
-	router.use(requireAuthViaAuthService);
+	router.use(authMiddlewareOverride ?? requireAuthViaAuthService);
 
 	router.post("/create", createController.createProject);
 	router.get("/", getAllController.getAllProjects);

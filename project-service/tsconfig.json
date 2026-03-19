@@ -18,10 +18,6 @@
     // and npm install -D @types/node
 
     // Other Outputs
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -42,5 +38,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-  }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["tests", "vitest.config.ts", "node_modules", "dist"]
 }
