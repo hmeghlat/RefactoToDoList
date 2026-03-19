@@ -1,4 +1,4 @@
-import { getToken } from './authService';
+import { fetchWithAuth } from '../utils/fetchWithAuth';
 import type { Task } from '../interface/Task/Task';
 import type { TaskStatus } from '../interface/Task/TaskStatus';
 import type { TaskPriority } from '../interface/Task/TaskPriority';
@@ -9,24 +9,16 @@ export type { Task, TaskStatus, TaskPriority, CreateTaskPayload, UpdateTaskPaylo
 
 const TASK_BASE = '/tasks';
 
-function authHeaders() {
-    return {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getToken()}`,
-    };
-}
-
 export async function getTasksByProject(projectId: number): Promise<Task[]> {
-    const res = await fetch(`${TASK_BASE}?projectId=${projectId}`, { headers: authHeaders() });
+    const res = await fetchWithAuth(`${TASK_BASE}?projectId=${projectId}`);
     if (!res.ok) throw new Error('Erreur lors du chargement des tâches');
     const data = await res.json();
     return data.tasks;
 }
 
 export async function createTask(payload: CreateTaskPayload): Promise<Task> {
-    const res = await fetch(TASK_BASE, {
+    const res = await fetchWithAuth(TASK_BASE, {
         method: 'POST',
-        headers: authHeaders(),
         body: JSON.stringify(payload),
     });
     if (!res.ok) {
@@ -38,9 +30,8 @@ export async function createTask(payload: CreateTaskPayload): Promise<Task> {
 }
 
 export async function updateTask(id: number, payload: UpdateTaskPayload): Promise<Task> {
-    const res = await fetch(`${TASK_BASE}/${id}`, {
+    const res = await fetchWithAuth(`${TASK_BASE}/${id}`, {
         method: 'PUT',
-        headers: authHeaders(),
         body: JSON.stringify(payload),
     });
     if (!res.ok) {
@@ -52,10 +43,7 @@ export async function updateTask(id: number, payload: UpdateTaskPayload): Promis
 }
 
 export async function deleteTask(id: number): Promise<void> {
-    const res = await fetch(`${TASK_BASE}/${id}`, {
-        method: 'DELETE',
-        headers: authHeaders(),
-    });
+    const res = await fetchWithAuth(`${TASK_BASE}/${id}`, { method: 'DELETE' });
     if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message ?? 'Erreur lors de la suppression');
@@ -63,9 +51,8 @@ export async function deleteTask(id: number): Promise<void> {
 }
 
 export async function updateTaskStatus(id: number, status: TaskStatus): Promise<Task> {
-    const res = await fetch(`${TASK_BASE}/${id}`, {
+    const res = await fetchWithAuth(`${TASK_BASE}/${id}`, {
         method: 'PUT',
-        headers: authHeaders(),
         body: JSON.stringify({ status }),
     });
     if (!res.ok) {
