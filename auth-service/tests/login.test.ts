@@ -1,10 +1,11 @@
+		const token = res.body.token as string;
 import { describe, it, expect, beforeEach } from "vitest";
 import request from "supertest";
 import { createTestApp } from "./helpers/createTestApp.js";
 
 const USER = {
 	email: "olivier.dick@test.com",
-	password: "Password123",
+	password: "password123",
 	firstName: "Olivier",
 	lastName: "Dick",
 };

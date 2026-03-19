@@ -5,7 +5,7 @@ import { createTestApp } from "./helpers/createTestApp.js";
 
 const USER = {
 	email: "olivier.dick@test.com",
-	password: "Password123",
+	password: "password123",
 	firstName: "Olivier",
 	lastName: "Dick",
 };

@@ -214,15 +214,16 @@ export const deleteProjectController = (db: Connection) => {
                 return;
             }
 
-            // Récupérer les tâches du projet via task-service
             const taskServiceUrl =
                 process.env.TASK_SERVICE_URL || 'http://localhost:3002';
+
             const response = await fetch(
                 `${taskServiceUrl.replace(/\/+$/, '')}/tasks?projectId=${id}`,
                 {
                     headers: { accept: 'application/json' },
                 },
             );
+
             if (!response.ok) {
                 const text = await response.text().catch(() => '');
                 res.status(502).json({
@@ -232,13 +233,16 @@ export const deleteProjectController = (db: Connection) => {
                 });
                 return;
             }
+
             const json = await response.json();
             const tasks = Array.isArray(json.tasks) ? json.tasks : [];
 
-            // Vérifier si toutes les tâches sont DONE
             const allDone =
                 tasks.length === 0 ||
                 tasks.every((t: any) => t.status === 'DONE');
+
+            const body = (req.body ?? {}) as Record<string, unknown>;
+
             const forceDelete =
                 req.query.force === 'true' || (req.body as Record<string, unknown> | undefined)?.force === true;
 
@@ -251,9 +255,8 @@ export const deleteProjectController = (db: Connection) => {
                 return;
             }
 
-            await db
-                .promise()
-                .execute('DELETE FROM projects WHERE id = ?', [id]);
+            await db.promise().execute('DELETE FROM projects WHERE id = ?', [id]);
+
             res.status(204).send();
         } catch (error) {
             console.error('deleteProject error:', error);

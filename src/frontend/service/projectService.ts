@@ -5,8 +5,8 @@ import type { CreateProjectPayload } from '../interface/Project/CreateProjectPay
 import type { UpdateProjectPayload } from '../interface/Project/UpdateProjectPayload';
 
 export type { Project, ProjectStatus, CreateProjectPayload, UpdateProjectPayload };
-
-const PROJECT_BASE = '/projects';
+const API_BASE = "http://localhost:8080";
+const PROJECT_BASE = `${API_BASE}/projects/`;
 
 export async function getAllProjects(): Promise<Project[]> {
     const res = await fetchWithAuth(PROJECT_BASE);
@@ -16,7 +16,7 @@ export async function getAllProjects(): Promise<Project[]> {
 }
 
 export async function updateProject(id: number, payload: UpdateProjectPayload): Promise<Project> {
-    const res = await fetchWithAuth(`${PROJECT_BASE}/${id}`, {
+    const res = await fetchWithAuth(`${PROJECT_BASE}${id}`, {
         method: 'PUT',
         body: JSON.stringify(payload),
     });
@@ -29,7 +29,7 @@ export async function updateProject(id: number, payload: UpdateProjectPayload): 
 }
 
 export async function deleteProject(id: number): Promise<void> {
-    const res = await fetchWithAuth(`${PROJECT_BASE}/${id}`, { method: 'DELETE' });
+    const res = await fetchWithAuth(`${PROJECT_BASE}${id}`, { method: 'DELETE' });
     if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message ?? 'Erreur lors de la suppression du projet');
@@ -37,7 +37,7 @@ export async function deleteProject(id: number): Promise<void> {
 }
 
 export async function createProject(payload: CreateProjectPayload): Promise<Project> {
-    const res = await fetchWithAuth(`${PROJECT_BASE}/create`, {
+    const res = await fetchWithAuth(`${PROJECT_BASE}create`, {
         method: 'POST',
         body: JSON.stringify(payload),
     });
