@@ -30,48 +30,36 @@ const { connection, channel } = await connectRabbit();
 
 await subscribe({
   channel,
-  routingKeys: ["project.completed", "task.reopened", "task.completed", "task.created"],
+  routingKeys: [
+    "project.completed",
+    "task.created",
+    "task.completed",
+    "task.cancelled",
+    "task.reopened",
+    "task.started",
+    "task.deleted",
+  ],
   onMessage: (msg) => {
     const payload = safeJson(msg);
     const routingKey = msg.fields.routingKey;
 
-    if (routingKey === "project.completed") {
-      console.log("[NOTIF] Projet terminé:", payload);
-      sendNotificationToAllClients({
-        type: "project.completed",
-        data: payload,
-      });
+    const knownKeys = [
+      "project.completed",
+      "task.created",
+      "task.completed",
+      "task.cancelled",
+      "task.reopened",
+      "task.started",
+      "task.deleted",
+    ];
+
+    if (knownKeys.includes(routingKey)) {
+      console.log(`[NOTIF] ${routingKey}:`, payload);
+      sendNotificationToAllClients({ type: routingKey, data: payload });
       return;
     }
 
-    if (routingKey === "task.reopened") {
-      console.log("[NOTIF] Tâche réouverte:", payload);
-      sendNotificationToAllClients({
-        type: "task.reopened",
-        data: payload,
-      });
-      return;
-    }
-
-    if (routingKey === "task.completed") {
-      console.log("[NOTIF] Tâche complétée:", payload);
-      sendNotificationToAllClients({
-        type: "task.completed",
-        data: payload,
-      });
-      return;
-    }
-
-    if (routingKey === "task.created") {
-      console.log("[NOTIF] Tâche créée:", payload);
-      sendNotificationToAllClients({
-        type: "task.created",
-        data: payload,
-      });
-      return;
-    }
-
-    console.log("[NOTIF] Event:", routingKey, payload);
+    console.log("[NOTIF] Event inconnu:", routingKey, payload);
   },
 });
 

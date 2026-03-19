@@ -266,25 +266,21 @@ export const createTaskController = (params: {
                 return;
             }
 
-            const { before, after } = result;
-            if (before.status !== after.status) {
-                if (before.status !== 'DONE' && after.status === 'DONE') {
-                    rabbit.publishEvent({
-                        type: 'TaskCompleted',
-                        occurredAt: new Date().toISOString(),
-                        data: { taskId: after.id, projectId: after.projectId },
-                    });
-                } else if (
-                    before.status === 'DONE' &&
-                    after.status !== 'DONE'
-                ) {
-                    rabbit.publishEvent({
-                        type: 'TaskReopened',
-                        occurredAt: new Date().toISOString(),
-                        data: { taskId: after.id, projectId: after.projectId },
-                    });
-                }
-            }
+      const { before, after } = result;
+      if (before.status !== after.status) {
+        const occurredAt = new Date().toISOString();
+        const eventData = { taskId: after.id, projectId: after.projectId };
+
+        if (after.status === "DONE") {
+          rabbit.publishEvent({ type: "TaskCompleted", occurredAt, data: eventData });
+        } else if (after.status === "CANCELLED") {
+          rabbit.publishEvent({ type: "TaskCancelled", occurredAt, data: eventData });
+        } else if (after.status === "IN_PROGRESS") {
+          rabbit.publishEvent({ type: "TaskStarted", occurredAt, data: eventData });
+        } else if (after.status === "TODO") {
+          rabbit.publishEvent({ type: "TaskReopened", occurredAt, data: eventData });
+        }
+      }
 
             res.status(200).json({ task: after });
         } catch (error) {
@@ -293,19 +289,31 @@ export const createTaskController = (params: {
         }
     };
 
-    const deleteTask = async (req: Request, res: Response) => {
-        try {
-            const id = parsePositiveInt(req.params.id);
-            if (!id) {
-                res.status(400).json({ message: 'Invalid task ID' });
-                return;
-            }
+  const deleteTask = async (req: Request, res: Response) => {
+    try {
+      const id = parsePositiveInt(req.params.id);
+      if (!id) {
+        res.status(400).json({ message: "Invalid task ID" });
+        return;
+      }
 
-            const deleted = await repo.remove(id);
-            if (!deleted) {
-                res.status(404).json({ message: 'Task not found' });
-                return;
-            }
+      const task = await repo.getById(id);
+      if (!task) {
+        res.status(404).json({ message: "Task not found" });
+        return;
+      }
+
+      const deleted = await repo.remove(id);
+      if (!deleted) {
+        res.status(404).json({ message: "Task not found" });
+        return;
+      }
+
+      rabbit.publishEvent({
+        type: "TaskDeleted",
+        occurredAt: new Date().toISOString(),
+        data: { taskId: task.id, projectId: task.projectId },
+      });
 
             res.status(204).send();
         } catch (error) {
