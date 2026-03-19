@@ -1,109 +1,19 @@
 import type { Request, Response } from 'express';
 import type { Connection, ResultSetHeader, RowDataPacket } from 'mysql2';
 
-import {
-    toProject,
-    type Project,
-    type ProjectRow,
-    type ProjectStatus,
-} from '../models/project.js';
-
+import { toProject, type ProjectRow } from '../models/project.js';
 type ProjectRowPacket = RowDataPacket & ProjectRow;
 
-const isNonEmptyString = (value: unknown): value is string =>
-    typeof value === 'string' && value.trim().length > 0;
-
-const isFiniteNumber = (value: unknown): value is number =>
-    typeof value === 'number' && Number.isFinite(value);
-
-const parsePositiveInt = (value: unknown): number | null => {
-    if (isFiniteNumber(value)) {
-        if (!Number.isInteger(value) || value <= 0) return null;
-        return value;
-    }
-
-    if (typeof value === 'string') {
-        const trimmed = value.trim();
-        if (trimmed.length === 0) return null;
-        const parsed = Number.parseInt(trimmed, 10);
-        if (!Number.isFinite(parsed) || parsed <= 0) return null;
-        return parsed;
-    }
-
-    return null;
-};
-
-const allowedProjectStatuses: ReadonlySet<ProjectStatus> = new Set([
-    'NOT_STARTED',
-    'PENDING',
-    'IN_PROGRESS',
-    'DONE',
-]);
-
-const parseProjectStatus = (value: unknown): ProjectStatus | null => {
-    if (!isNonEmptyString(value)) return null;
-    const status = value.trim().toUpperCase() as ProjectStatus;
-    return allowedProjectStatuses.has(status) ? status : null;
-};
-
-const isValidDateOnly = (value: string): boolean =>
-    /^\d{4}-\d{2}-\d{2}$/.test(value);
-
-const parseDateOnlyOrNull = (value: unknown): string | null => {
-    if (value === undefined || value === null) return null;
-    if (!isNonEmptyString(value)) return null;
-    const trimmed = value.trim();
-    if (!isValidDateOnly(trimmed)) return null;
-    return trimmed;
-};
-
-const parseBudgetOrDefault = (value: unknown): number => {
-    if (value === undefined || value === null || value === '') return 0;
-    if (isFiniteNumber(value)) return value;
-    if (typeof value === 'string') {
-        const parsed = Number.parseFloat(value);
-        return Number.isFinite(parsed) ? parsed : 0;
-    }
-    return 0;
-};
-
-const badRequest = (req: Request, res: Response, message: string) => {
-    res.status(400).json({
-        message,
-        received: {
-            contentType: req.header('content-type'),
-            keys: Object.keys((req.body ?? {}) as Record<string, unknown>),
-        },
-    });
-};
-
-const MAX_DATE = new Date("2100-12-31");
-
-const datesAreValid = (
-    startDate: Date | null,
-    dueDate: Date | null
-): boolean => {
-    if (!startDate || !dueDate) return false;
-    if (isNaN(startDate.getTime()) || isNaN(dueDate.getTime())) return false;
-    if (startDate > MAX_DATE || dueDate > MAX_DATE) return false;
-    if (startDate > dueDate) return false;
-    return true;
-};
-const getProjectById = async (
-    db: Connection,
-    id: number,
-): Promise<Project | null> => {
-    const [rows] = await db
-        .promise()
-        .query<
-            ProjectRowPacket[]
-        >('SELECT id, owner_user_id, name, description, start_date, due_date, budget, status, created_at, updated_at FROM projects WHERE id = ? LIMIT 1', [id]);
-
-    const firstRow = rows[0];
-    if (!firstRow) return null;
-    return toProject(firstRow);
-};
-
+import {
+    isNonEmptyString,
+    badRequest,
+    datesAreValid,
+    getProjectById,
+    parseBudgetOrDefault,
+    parseDateOnlyOrNull,
+    parsePositiveInt,
+    parseProjectStatus,
+} from '../service/projectService.js';
 export const createProjectController = (db: Connection) => {
     const createProject = async (req: Request, res: Response) => {
         try {
@@ -115,14 +25,16 @@ export const createProjectController = (db: Connection) => {
             const description = isNonEmptyString(body.description)
                 ? body.description.trim()
                 : null;
-            const startDate = new Date(parseDateOnlyOrNull(body.startDate) || '');
+            const startDate = new Date(
+                parseDateOnlyOrNull(body.startDate) || '',
+            );
             const dueDate = new Date(parseDateOnlyOrNull(body.dueDate) || '');
 
             if (!datesAreValid(startDate, dueDate)) {
                 badRequest(
                     req,
                     res,
-                    "Les dates sont invalides : la date de fin doit être supérieure ou égale à la date de début, et les dates doivent être superieur ou egale à la date actuelle."
+                    'Les dates sont invalides : la date de fin doit être supérieure ou égale à la date de début, et les dates doivent être superieur ou egale à la date actuelle.',
                 );
                 return;
             }
@@ -152,12 +64,14 @@ export const createProjectController = (db: Connection) => {
             // Vérification du nom de projet unique pour l'utilisateur
             const [existingRows] = await db
                 .promise()
-                .query<ProjectRowPacket[]>(
-                    'SELECT id FROM projects WHERE owner_user_id = ? AND name = ?',
-                    [ownerUserId, name]
-                );
+                .query<
+                    ProjectRowPacket[]
+                >('SELECT id FROM projects WHERE owner_user_id = ? AND name = ?', [ownerUserId, name]);
             if (existingRows.length > 0) {
-                res.status(409).json({ message: 'Un projet avec ce nom existe déjà pour cet utilisateur.' });
+                res.status(409).json({
+                    message:
+                        'Un projet avec ce nom existe déjà pour cet utilisateur.',
+                });
                 return;
             }
 
@@ -234,35 +148,45 @@ export const updateProjectController = (db: Connection) => {
 
             const body = (req.body ?? {}) as Record<string, unknown>;
 
-            const name = isNonEmptyString(body.name) ? body.name.trim() : existing.name;
-            const description = body.description !== undefined
-                ? (isNonEmptyString(body.description) ? body.description.trim() : null)
-                : existing.description;
-            const startDate = body.startDate !== undefined
-                ? new Date(parseDateOnlyOrNull(body.startDate) || '')
-                : existing.startDate;
-            const dueDate = body.dueDate !== undefined
-                ? new Date(parseDateOnlyOrNull(body.dueDate) || '')
-                : existing.dueDate;
+            const name = isNonEmptyString(body.name)
+                ? body.name.trim()
+                : existing.name;
+            const description =
+                body.description !== undefined
+                    ? isNonEmptyString(body.description)
+                        ? body.description.trim()
+                        : null
+                    : existing.description;
+            const startDate =
+                body.startDate !== undefined
+                    ? new Date(parseDateOnlyOrNull(body.startDate) || '')
+                    : existing.startDate;
+            const dueDate =
+                body.dueDate !== undefined
+                    ? new Date(parseDateOnlyOrNull(body.dueDate) || '')
+                    : existing.dueDate;
 
             if (!datesAreValid(startDate, dueDate)) {
                 badRequest(
                     req,
                     res,
-                    "Les dates sont invalides : la date de fin doit être supérieure ou égale à la date de début, et les dates doivent être supérieures ou égales à la date actuelle."
+                    'Les dates sont invalides : la date de fin doit être supérieure ou égale à la date de début, et les dates doivent être supérieures ou égales à la date actuelle.',
                 );
                 return;
             }
 
-            const budget = body.budget !== undefined
-                ? parseBudgetOrDefault(body.budget)
-                : existing.budget;
+            const budget =
+                body.budget !== undefined
+                    ? parseBudgetOrDefault(body.budget)
+                    : existing.budget;
             const status = parseProjectStatus(body.status) ?? existing.status;
 
-            await db.promise().execute(
-                'UPDATE projects SET name = ?, description = ?, start_date = ?, due_date = ?, budget = ?, status = ?, updated_at = NOW() WHERE id = ?',
-                [name, description, startDate, dueDate, budget, status, id],
-            );
+            await db
+                .promise()
+                .execute(
+                    'UPDATE projects SET name = ?, description = ?, start_date = ?, due_date = ?, budget = ?, status = ?, updated_at = NOW() WHERE id = ?',
+                    [name, description, startDate, dueDate, budget, status, id],
+                );
 
             const updated = await getProjectById(db, id);
             res.status(200).json({ project: updated });
@@ -291,31 +215,45 @@ export const deleteProjectController = (db: Connection) => {
             }
 
             // Récupérer les tâches du projet via task-service
-            const taskServiceUrl = process.env.TASK_SERVICE_URL || "http://localhost:3002";
-            const response = await fetch(`${taskServiceUrl.replace(/\/+$/, "")}/tasks?projectId=${id}`, {
-                headers: { accept: "application/json" }
-            });
+            const taskServiceUrl =
+                process.env.TASK_SERVICE_URL || 'http://localhost:3002';
+            const response = await fetch(
+                `${taskServiceUrl.replace(/\/+$/, '')}/tasks?projectId=${id}`,
+                {
+                    headers: { accept: 'application/json' },
+                },
+            );
             if (!response.ok) {
-                const text = await response.text().catch(() => "");
-                res.status(502).json({ message: "task-service error", status: response.status, body: text });
+                const text = await response.text().catch(() => '');
+                res.status(502).json({
+                    message: 'task-service error',
+                    status: response.status,
+                    body: text,
+                });
                 return;
             }
             const json = await response.json();
             const tasks = Array.isArray(json.tasks) ? json.tasks : [];
 
             // Vérifier si toutes les tâches sont DONE
-            const allDone = tasks.length === 0 || tasks.every((t: any) => t.status === "DONE");
-            const forceDelete = req.query.force === "true" || req.body.force === true;
+            const allDone =
+                tasks.length === 0 ||
+                tasks.every((t: any) => t.status === 'DONE');
+            const forceDelete =
+                req.query.force === 'true' || req.body.force === true;
 
             if (!allDone && !forceDelete) {
                 res.status(409).json({
-                    message: "Certaines tâches ne sont pas terminées. Ajoutez force=true pour confirmer la suppression.",
-                    tasks: tasks.filter((t: any) => t.status !== "DONE")
+                    message:
+                        'Certaines tâches ne sont pas terminées. Ajoutez force=true pour confirmer la suppression.',
+                    tasks: tasks.filter((t: any) => t.status !== 'DONE'),
                 });
                 return;
             }
 
-            await db.promise().execute('DELETE FROM projects WHERE id = ?', [id]);
+            await db
+                .promise()
+                .execute('DELETE FROM projects WHERE id = ?', [id]);
             res.status(204).send();
         } catch (error) {
             console.error('deleteProject error:', error);
@@ -332,12 +270,16 @@ export const getAllProjectsController = (db: Connection) => {
             // Récupère l'utilisateur connecté
             const userId = parsePositiveInt(req.auth?.userId);
             if (!userId) {
-                res.status(401).json({ message: 'Utilisateur non authentifié' });
+                res.status(401).json({
+                    message: 'Utilisateur non authentifié',
+                });
                 return;
             }
             const [rows] = await db
                 .promise()
-                .query<ProjectRowPacket[]>('SELECT * FROM projects WHERE owner_user_id = ?', [userId]);
+                .query<
+                    ProjectRowPacket[]
+                >('SELECT * FROM projects WHERE owner_user_id = ?', [userId]);
 
             const projects = rows.map(toProject);
             res.status(200).json({ projects });

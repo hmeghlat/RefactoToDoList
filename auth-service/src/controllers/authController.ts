@@ -1,78 +1,13 @@
 import type { Request, Response } from "express";
 import type { Pool as Connection, ResultSetHeader, RowDataPacket } from "mysql2";
 import bcrypt from "bcrypt";
-import jwt, { type Secret, type SignOptions } from "jsonwebtoken";
 
 import {
 	toPublicUser,
-	toUser,
-	type AuthTokenPayload,
 	type LoginInput,
 	type RegisterInput,
-	type UserRow,
 } from "../models/User.js";
-
-type UserRowPacket = RowDataPacket & UserRow;
-
-const getJwtSecret = (): string => {
-	const secret = process.env.JWT_SECRET;
-	if (!secret) {
-		throw new Error("JWT_SECRET is missing in environment");
-	}
-	return secret;
-};
-
-const signToken = (payload: AuthTokenPayload): string => {
-	const secret: Secret = getJwtSecret();
-	const expiresIn = (process.env.JWT_EXPIRES_IN || "1h") as SignOptions["expiresIn"];
-	return jwt.sign(payload, secret, { expiresIn } as SignOptions);
-};
-
-const normalizeEmail = (email: string): string => email.trim().toLowerCase();
-
-const getUserByEmail = async (db: Connection, email: string) => {
-	const [rows] = await db
-		.promise()
-		.query<UserRowPacket[]>(
-			"SELECT id, email, first_name, last_name, password_hash, created_at FROM users WHERE email = ? LIMIT 1",
-			[email]
-		);
-
-	const firstRow = rows[0];
-	if (!firstRow) return null;
-	return toUser(firstRow);
-};
-
-const getUserById = async (db: Connection, id: number) => {
-	const [rows] = await db
-		.promise()
-		.query<UserRowPacket[]>(
-			"SELECT id, email, first_name, last_name, password_hash, created_at FROM users WHERE id = ? LIMIT 1",
-			[id]
-		);
-
-	const firstRow = rows[0];
-	if (!firstRow) return null;
-	return toUser(firstRow);
-};
-
-const createUser = async (
-	db: Connection,
-	input: { email: string; firstName: string; lastName: string; passwordHash: string }
-) => {
-	const [result] = await db
-		.promise()
-		.execute<ResultSetHeader>(
-			"INSERT INTO users (email, first_name, last_name, password_hash) VALUES (?, ?, ?, ?)",
-			[input.email, input.firstName, input.lastName, input.passwordHash]
-		);
-
-	const user = await getUserById(db, result.insertId);
-	if (!user) {
-		throw new Error("User creation failed");
-	}
-	return user;
-};
+import { createUser,getUserByEmail,normalizeEmail,getUserById,signToken } from "../service/authService.js";
 
 export const createAuthController = (db: Connection) => {
 	const register = async (req: Request, res: Response) => {
@@ -92,6 +27,20 @@ export const createAuthController = (db: Connection) => {
 		const password = body.password;
 		const firstName = body.firstName.trim();
 		const lastName = body.lastName.trim();
+
+		// Vérification robustesse du mot de passe
+		const passwordValid =
+			password.length >= 8 &&
+			/[A-Z]/.test(password) &&
+			/[a-z]/.test(password) &&
+			/[0-9]/.test(password) 
+		if (!passwordValid) {
+			res.status(400).json({
+				message:
+					"Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial."
+			});
+			return;
+		}
 
 		const existing = await getUserByEmail(db, email);
 		if (existing) {

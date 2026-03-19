@@ -8,6 +8,32 @@ const getProjectServiceUrl = (): string => {
   return base.replace(/\/+$/, "");
 };
 
+export const fetchProjectStatus = async (projectId: number, authToken: string): Promise<string | null> => {
+  const url = `${getProjectServiceUrl()}/projects/${projectId}`;
+  const res = await fetch(url, {
+    headers: {
+      accept: "application/json",
+      Authorization: authToken,
+    },
+  });
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`project-service error ${res.status}: ${text}`);
+  }
+
+  const json = (await res.json()) as {
+    project?: { status?: string };
+  };
+
+  const project = json.project;
+  if (!project) return null;
+
+  return project.status ?? null;
+};
+
 export const fetchProjectDates = async (
   projectId: number,
   authToken: string
