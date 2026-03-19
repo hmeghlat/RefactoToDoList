@@ -7,7 +7,8 @@ import type { UpdateTaskPayload } from '../interface/Task/UpdateTaskPayload';
 
 export type { Task, TaskStatus, TaskPriority, CreateTaskPayload, UpdateTaskPayload };
 
-const TASK_BASE = '/tasks';
+const API_BASE = "http://localhost:8080";
+const TASK_BASE = `${API_BASE}/tasks/`;
 
 export async function getTasksByProject(projectId: number): Promise<Task[]> {
     const res = await fetchWithAuth(`${TASK_BASE}?projectId=${projectId}`);
@@ -30,7 +31,7 @@ export async function createTask(payload: CreateTaskPayload): Promise<Task> {
 }
 
 export async function updateTask(id: number, payload: UpdateTaskPayload): Promise<Task> {
-    const res = await fetchWithAuth(`${TASK_BASE}/${id}`, {
+    const res = await fetchWithAuth(`${TASK_BASE}${id}`, {
         method: 'PUT',
         body: JSON.stringify(payload),
     });
@@ -43,7 +44,7 @@ export async function updateTask(id: number, payload: UpdateTaskPayload): Promis
 }
 
 export async function deleteTask(id: number): Promise<void> {
-    const res = await fetchWithAuth(`${TASK_BASE}/${id}`, { method: 'DELETE' });
+    const res = await fetchWithAuth(`${TASK_BASE}${id}`, { method: 'DELETE' });
     if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message ?? 'Erreur lors de la suppression');
@@ -51,7 +52,7 @@ export async function deleteTask(id: number): Promise<void> {
 }
 
 export async function updateTaskStatus(id: number, status: TaskStatus): Promise<Task> {
-    const res = await fetchWithAuth(`${TASK_BASE}/${id}`, {
+    const res = await fetchWithAuth(`${TASK_BASE}${id}`, {
         method: 'PUT',
         body: JSON.stringify({ status }),
     });
