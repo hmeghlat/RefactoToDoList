@@ -77,6 +77,27 @@ const badRequest = (req: Request, res: Response, message: string) => {
     });
 };
 
+const datesAreValid = (
+    startDate: Date | null ,
+    dueDate: Date | null
+  ): boolean => {
+    if (!startDate || !dueDate) return false;
+  
+    const now = new Date();
+    const maxDate = new Date("2100-12-31");
+  
+    // Vérifie que les dates sont valides
+    if (isNaN(startDate.getTime()) || isNaN(dueDate.getTime())) return false;
+  
+    // Entre maintenant et 2100
+    if (startDate < now || startDate > maxDate) return false;
+    if (dueDate < now || dueDate > maxDate) return false;
+  
+    // start < due
+    if (startDate > dueDate) return false;
+  
+    return true;
+  };
 const getProjectById = async (
     db: Connection,
     id: number,
@@ -103,8 +124,17 @@ export const createProjectController = (db: Connection) => {
             const description = isNonEmptyString(body.description)
                 ? body.description.trim()
                 : null;
-            const startDate = parseDateOnlyOrNull(body.startDate);
-            const dueDate = parseDateOnlyOrNull(body.dueDate);
+            const startDate = new Date(parseDateOnlyOrNull(body.startDate) || '');
+            const dueDate = new Date(parseDateOnlyOrNull(body.dueDate) || '');
+
+            if (!datesAreValid(startDate, dueDate)) {
+                badRequest(
+                    req,
+                    res,
+                    "Les dates sont invalides : la date de fin doit être supérieure ou égale à la date de début, et les dates doivent être superieur ou egale à la date actuelle."
+                );
+                return;
+            }
             const budget = parseBudgetOrDefault(body.budget);
             const status = parseProjectStatus(body.status) ?? 'NOT_STARTED';
 
@@ -125,6 +155,18 @@ export const createProjectController = (db: Connection) => {
                     res,
                     'name is required (ownerUserId comes from auth token)',
                 );
+                return;
+            }
+
+            // Vérification du nom de projet unique pour l'utilisateur
+            const [existingRows] = await db
+                .promise()
+                .query<ProjectRowPacket[]>(
+                    'SELECT id FROM projects WHERE owner_user_id = ? AND name = ?',
+                    [ownerUserId, name]
+                );
+            if (existingRows.length > 0) {
+                res.status(409).json({ message: 'Un projet avec ce nom existe déjà pour cet utilisateur.' });
                 return;
             }
 
@@ -206,11 +248,21 @@ export const updateProjectController = (db: Connection) => {
                 ? (isNonEmptyString(body.description) ? body.description.trim() : null)
                 : existing.description;
             const startDate = body.startDate !== undefined
-                ? parseDateOnlyOrNull(body.startDate)
+                ? new Date(parseDateOnlyOrNull(body.startDate) || '')
                 : existing.startDate;
             const dueDate = body.dueDate !== undefined
-                ? parseDateOnlyOrNull(body.dueDate)
+                ? new Date(parseDateOnlyOrNull(body.dueDate) || '')
                 : existing.dueDate;
+
+            if (!datesAreValid(startDate, dueDate)) {
+                badRequest(
+                    req,
+                    res,
+                    "Les dates sont invalides : la date de fin doit être supérieure ou égale à la date de début, et les dates doivent être supérieures ou égales à la date actuelle."
+                );
+                return;
+            }
+
             const budget = body.budget !== undefined
                 ? parseBudgetOrDefault(body.budget)
                 : existing.budget;
@@ -247,6 +299,31 @@ export const deleteProjectController = (db: Connection) => {
                 return;
             }
 
+            // Récupérer les tâches du projet via task-service
+            const taskServiceUrl = process.env.TASK_SERVICE_URL || "http://localhost:3002";
+            const response = await fetch(`${taskServiceUrl.replace(/\/+$/, "")}/tasks?projectId=${id}`, {
+                headers: { accept: "application/json" }
+            });
+            if (!response.ok) {
+                const text = await response.text().catch(() => "");
+                res.status(502).json({ message: "task-service error", status: response.status, body: text });
+                return;
+            }
+            const json = await response.json();
+            const tasks = Array.isArray(json.tasks) ? json.tasks : [];
+
+            // Vérifier si toutes les tâches sont DONE
+            const allDone = tasks.length === 0 || tasks.every((t: any) => t.status === "DONE");
+            const forceDelete = req.query.force === "true" || req.body.force === true;
+
+            if (!allDone && !forceDelete) {
+                res.status(409).json({
+                    message: "Certaines tâches ne sont pas terminées. Ajoutez force=true pour confirmer la suppression.",
+                    tasks: tasks.filter((t: any) => t.status !== "DONE")
+                });
+                return;
+            }
+
             await db.promise().execute('DELETE FROM projects WHERE id = ?', [id]);
             res.status(204).send();
         } catch (error) {
@@ -261,9 +338,15 @@ export const deleteProjectController = (db: Connection) => {
 export const getAllProjectsController = (db: Connection) => {
     const getAllProjects = async (req: Request, res: Response) => {
         try {
+            // Récupère l'utilisateur connecté
+            const userId = parsePositiveInt(req.auth?.userId);
+            if (!userId) {
+                res.status(401).json({ message: 'Utilisateur non authentifié' });
+                return;
+            }
             const [rows] = await db
                 .promise()
-                .query<ProjectRowPacket[]>('SELECT * FROM projects');
+                .query<ProjectRowPacket[]>('SELECT * FROM projects WHERE owner_user_id = ?', [userId]);
 
             const projects = rows.map(toProject);
             res.status(200).json({ projects });
