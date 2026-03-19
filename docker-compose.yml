@@ -4,6 +4,12 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
 
   mysql-auth:
     image: mysql:8.0
@@ -61,8 +67,10 @@ services:
       - DB_PASSWORD=root
       - DB_NAME=authdb
     depends_on:
-      - rabbitmq
-      - mysql-auth
+      rabbitmq:
+        condition: service_healthy
+      mysql-auth:
+        condition: service_started
 
   project-service:
     build:
@@ -79,9 +87,12 @@ services:
       - DB_PASSWORD=root
       - DB_NAME=projectdb
     depends_on:
-      - rabbitmq
-      - auth-service
-      - mysql-project
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      mysql-project:
+        condition: service_started
 
   task-service:
     build:
@@ -90,14 +101,19 @@ services:
       - "3002:3002"
     environment:
       - PORT=3002
+      - PROJECT_SERVICE_URL=http://project-service:3001
       - RABBITMQ_URL=amqp://rabbitmq:5672
       - DB_HOST=mysql-task
       - DB_USER=task_user
       - DB_PASSWORD=root
       - DB_NAME=taskdb
     depends_on:
-      - rabbitmq
-      - mysql-task
+      rabbitmq:
+        condition: service_healthy
+      mysql-task:
+        condition: service_started
+      project-service:
+        condition: service_started
 
   notification-service:
     build:
@@ -108,7 +124,8 @@ services:
       - PORT=3003
       - RABBITMQ_URL=amqp://rabbitmq:5672
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
 
 volumes:
   mysql-auth-data:

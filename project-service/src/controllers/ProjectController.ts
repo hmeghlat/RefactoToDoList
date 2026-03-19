@@ -77,27 +77,18 @@ const badRequest = (req: Request, res: Response, message: string) => {
     });
 };
 
+const MAX_DATE = new Date("2100-12-31");
+
 const datesAreValid = (
-    startDate: Date | null ,
+    startDate: Date | null,
     dueDate: Date | null
-  ): boolean => {
+): boolean => {
     if (!startDate || !dueDate) return false;
-  
-    const now = new Date();
-    const maxDate = new Date("2100-12-31");
-  
-    // Vérifie que les dates sont valides
     if (isNaN(startDate.getTime()) || isNaN(dueDate.getTime())) return false;
-  
-    // Entre maintenant et 2100
-    if (startDate < now || startDate > maxDate) return false;
-    if (dueDate < now || dueDate > maxDate) return false;
-  
-    // start < due
+    if (startDate > MAX_DATE || dueDate > MAX_DATE) return false;
     if (startDate > dueDate) return false;
-  
     return true;
-  };
+};
 const getProjectById = async (
     db: Connection,
     id: number,

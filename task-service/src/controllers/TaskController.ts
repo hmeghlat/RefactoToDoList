@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import type { TaskPriority, TaskStatus } from "../models/task.js";
 import type { RabbitClient } from "../messaging/rabbitmq.js";
 import type { TasksRepository } from "../repository/tasksRepository.js";
+import { fetchProjectDates, validateDueDateAgainstProject } from "../clients/projectServiceClient.js";
 
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
@@ -42,6 +43,10 @@ const parseNullableDate = (value: unknown): Date | null | undefined => {
     return parsed;
   }
   return undefined;
+};
+
+const getAuthToken = (req: Request): string => {
+  return req.headers.authorization ?? "";
 };
 
 export const createTaskController = (params: { repo: TasksRepository; rabbit: RabbitClient }) => {
@@ -84,6 +89,19 @@ export const createTaskController = (params: { repo: TasksRepository; rabbit: Ra
       if (body.dueDate !== undefined && dueDate === undefined) {
         res.status(400).json({ message: "dueDate must be an ISO date string (YYYY-MM-DD) or null" });
         return;
+      }
+
+      if (dueDate) {
+        const projectDates = await fetchProjectDates(projectId, getAuthToken(req));
+        if (!projectDates) {
+          res.status(404).json({ message: "Project not found" });
+          return;
+        }
+        const dateError = validateDueDateAgainstProject(dueDate, projectDates);
+        if (dateError) {
+          res.status(422).json({ message: dateError });
+          return;
+        }
       }
 
       const task = await repo.create({
@@ -174,6 +192,24 @@ export const createTaskController = (params: { repo: TasksRepository; rabbit: Ra
       if (body.dueDate !== undefined && dueDate === undefined) {
         res.status(400).json({ message: "dueDate must be an ISO date string (YYYY-MM-DD) or null" });
         return;
+      }
+
+      if (dueDate) {
+        const existingTask = await repo.getById(id);
+        if (!existingTask) {
+          res.status(404).json({ message: "Task not found" });
+          return;
+        }
+        const projectDates = await fetchProjectDates(existingTask.projectId, getAuthToken(req));
+        if (!projectDates) {
+          res.status(404).json({ message: "Project not found" });
+          return;
+        }
+        const dateError = validateDueDateAgainstProject(dueDate, projectDates);
+        if (dateError) {
+          res.status(422).json({ message: dateError });
+          return;
+        }
       }
 
       const result = await repo.update(id, {
