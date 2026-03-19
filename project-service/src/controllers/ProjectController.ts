@@ -184,6 +184,80 @@ export const getProjectController = (db: Connection) => {
     return { getProject };
 };
 
+export const updateProjectController = (db: Connection) => {
+    const updateProject = async (req: Request, res: Response) => {
+        try {
+            const id = parsePositiveInt(req.params.id);
+            if (!id) {
+                badRequest(req, res, 'Invalid project ID');
+                return;
+            }
+
+            const existing = await getProjectById(db, id);
+            if (!existing) {
+                res.status(404).json({ message: 'Project not found' });
+                return;
+            }
+
+            const body = (req.body ?? {}) as Record<string, unknown>;
+
+            const name = isNonEmptyString(body.name) ? body.name.trim() : existing.name;
+            const description = body.description !== undefined
+                ? (isNonEmptyString(body.description) ? body.description.trim() : null)
+                : existing.description;
+            const startDate = body.startDate !== undefined
+                ? parseDateOnlyOrNull(body.startDate)
+                : existing.startDate;
+            const dueDate = body.dueDate !== undefined
+                ? parseDateOnlyOrNull(body.dueDate)
+                : existing.dueDate;
+            const budget = body.budget !== undefined
+                ? parseBudgetOrDefault(body.budget)
+                : existing.budget;
+            const status = parseProjectStatus(body.status) ?? existing.status;
+
+            await db.promise().execute(
+                'UPDATE projects SET name = ?, description = ?, start_date = ?, due_date = ?, budget = ?, status = ?, updated_at = NOW() WHERE id = ?',
+                [name, description, startDate, dueDate, budget, status, id],
+            );
+
+            const updated = await getProjectById(db, id);
+            res.status(200).json({ project: updated });
+        } catch (error) {
+            console.error('updateProject error:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    };
+
+    return { updateProject };
+};
+
+export const deleteProjectController = (db: Connection) => {
+    const deleteProject = async (req: Request, res: Response) => {
+        try {
+            const id = parsePositiveInt(req.params.id);
+            if (!id) {
+                badRequest(req, res, 'Invalid project ID');
+                return;
+            }
+
+            const existing = await getProjectById(db, id);
+            if (!existing) {
+                res.status(404).json({ message: 'Project not found' });
+                return;
+            }
+
+            await db.promise().execute('DELETE FROM projects WHERE id = ?', [id]);
+            res.status(204).send();
+        } catch (error) {
+            console.error('deleteProject error:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    };
+
+    return { deleteProject };
+};
+
 export const getAllProjectsController = (db: Connection) => {
     const getAllProjects = async (req: Request, res: Response) => {
         try {

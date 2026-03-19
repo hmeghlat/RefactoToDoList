@@ -23,6 +23,15 @@ export interface CreateTaskPayload {
     userId: number;
     name: string;
     description?: string;
+    priority?: TaskPriority;
+    status?: TaskStatus;
+    dueDate?: string | null;
+}
+
+export interface UpdateTaskPayload {
+    name?: string;
+    description?: string;
+    priority?: TaskPriority;
     status?: TaskStatus;
     dueDate?: string | null;
 }
@@ -53,6 +62,31 @@ export async function createTask(payload: CreateTaskPayload): Promise<Task> {
     }
     const data = await res.json();
     return data.task;
+}
+
+export async function updateTask(id: number, payload: UpdateTaskPayload): Promise<Task> {
+    const res = await fetch(`${TASK_BASE}/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message ?? 'Erreur lors de la mise à jour');
+    }
+    const data = await res.json();
+    return data.task;
+}
+
+export async function deleteTask(id: number): Promise<void> {
+    const res = await fetch(`${TASK_BASE}/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message ?? 'Erreur lors de la suppression');
+    }
 }
 
 export async function updateTaskStatus(id: number, status: TaskStatus): Promise<Task> {

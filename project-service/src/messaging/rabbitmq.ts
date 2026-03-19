@@ -60,7 +60,7 @@ export const subscribe = async (params: {
     await channel.bindQueue(queue, EXCHANGE, key);
   }
 
-  await channel.consume(queue, async (msg) => {
+  await channel.consume(queue, async (msg: ConsumeMessage | null) => {
     if (!msg) return;
     try {
       await onMessage(msg);

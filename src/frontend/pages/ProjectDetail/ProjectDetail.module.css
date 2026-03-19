@@ -147,6 +147,35 @@
 .badge_IN_PROGRESS { background-color: #dbeafe; color: #2563eb; }
 .badge_DONE        { background-color: #d1fae5; color: #059669; }
 
+.projectBarActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.settingsBtn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.settingsBtn:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+    color: #374151;
+}
+
 .newTaskBtn {
     padding: 11px 22px;
     background-color: #191970;
@@ -159,8 +188,6 @@
     cursor: pointer;
     transition: background-color 0.2s;
     white-space: nowrap;
-    flex-shrink: 0;
-    align-self: center;
 }
 
 .newTaskBtn:hover {
@@ -179,19 +206,56 @@
 }
 
 .column {
-    background-color: #e9ecf0;
     border-radius: 12px;
     padding: 16px;
     min-height: 200px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    transition: background-color 0.15s;
+    transition: background-color 0.15s, outline 0.15s;
 }
 
-.column.dragOver {
-    background-color: #dde3f0;
-    outline: 2px dashed #191970;
+/* À faire — bleu gris */
+.column_TODO {
+    background-color: #e8edf5;
+    border-top: 4px solid #6b83b0;
+}
+.column_TODO.dragOver {
+    background-color: #d6dff0;
+    outline: 2px dashed #6b83b0;
+    outline-offset: -2px;
+}
+
+/* Commencé — orange */
+.column_IN_PROGRESS {
+    background-color: #fef3e2;
+    border-top: 4px solid #f59e0b;
+}
+.column_IN_PROGRESS.dragOver {
+    background-color: #fdeac8;
+    outline: 2px dashed #f59e0b;
+    outline-offset: -2px;
+}
+
+/* Annulé — rouge */
+.column_CANCELLED {
+    background-color: #fde8e8;
+    border-top: 4px solid #ef4444;
+}
+.column_CANCELLED.dragOver {
+    background-color: #fcd4d4;
+    outline: 2px dashed #ef4444;
+    outline-offset: -2px;
+}
+
+/* Terminé — vert */
+.column_DONE {
+    background-color: #e6f4ec;
+    border-top: 4px solid #10b981;
+}
+.column_DONE.dragOver {
+    background-color: #d1ead9;
+    outline: 2px dashed #10b981;
     outline-offset: -2px;
 }
 
@@ -211,8 +275,8 @@
 }
 
 .columnCount {
-    background-color: rgba(25, 25, 112, 0.1);
-    color: #191970;
+    background-color: rgba(0, 0, 0, 0.08);
+    color: #374151;
     font-size: 0.72rem;
     font-weight: 700;
     padding: 2px 8px;
@@ -240,12 +304,30 @@
     cursor: grabbing;
 }
 
+.taskCardHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
 .taskName {
     font-size: 0.9rem;
     font-weight: 600;
     color: #191970;
-    margin: 0 0 6px 0;
+    margin: 0;
     line-height: 1.4;
+    flex: 1;
+}
+
+.priorityDot {
+    flex-shrink: 0;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-top: 4px;
 }
 
 .taskDesc {
@@ -441,4 +523,64 @@
 .submitBtn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.modalActionsSpread {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.modalActionsSpread .modalActions {
+    margin-top: 0;
+}
+
+.deleteBtn {
+    padding: 11px 20px;
+    background-color: transparent;
+    border: 1.5px solid #fca5a5;
+    border-radius: 8px;
+    color: #ef4444;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.deleteBtn:hover {
+    background-color: #fef2f2;
+    border-color: #ef4444;
+}
+
+.deleteConfirmBtn {
+    padding: 11px 20px;
+    background-color: #ef4444;
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.deleteConfirmBtn:hover { background-color: #dc2626; }
+
+.deleteConfirmBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.confirmDelete {
+    padding: 12px 0;
+}
+
+.confirmText {
+    font-size: 0.95rem;
+    color: #374151;
+    margin: 0 0 24px 0;
+    text-align: center;
 }

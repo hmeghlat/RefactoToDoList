@@ -5,6 +5,8 @@ import {
 	createProjectController,
 	getAllProjectsController,
 	getProjectController,
+	updateProjectController,
+	deleteProjectController,
 } from "../controllers/ProjectController.js";
 
 import { createProjectTasksController } from "../controllers/ProjectTasksController.js";
@@ -16,6 +18,8 @@ export const ProjectsRouter = (db: Connection) => {
 	const createController = createProjectController(db);
 	const getController = getProjectController(db);
 	const getAllController = getAllProjectsController(db);
+	const updateController = updateProjectController(db);
+	const deleteController = deleteProjectController(db);
 	const tasksController = createProjectTasksController(db);
 
 	router.use(requireAuthViaAuthService);
@@ -23,6 +27,8 @@ export const ProjectsRouter = (db: Connection) => {
 	router.post("/create", createController.createProject);
 	router.get("/", getAllController.getAllProjects);
 	router.get("/:id", getController.getProject);
+	router.put("/:id", updateController.updateProject);
+	router.delete("/:id", deleteController.deleteProject);
 	router.post("/:id/tasks", tasksController.createTaskForProject);
 	router.get("/:id/tasks", tasksController.listTasksForProject);
 

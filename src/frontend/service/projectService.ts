@@ -26,6 +26,15 @@ export interface CreateProjectPayload {
     status?: ProjectStatus;
 }
 
+export interface UpdateProjectPayload {
+    name?: string;
+    description?: string;
+    startDate?: string | null;
+    dueDate?: string | null;
+    budget?: number;
+    status?: ProjectStatus;
+}
+
 function authHeaders() {
     return {
         'Content-Type': 'application/json',
@@ -38,6 +47,31 @@ export async function getAllProjects(): Promise<Project[]> {
     if (!res.ok) throw new Error('Erreur lors du chargement des projets');
     const data = await res.json();
     return data.projects;
+}
+
+export async function updateProject(id: number, payload: UpdateProjectPayload): Promise<Project> {
+    const res = await fetch(`${PROJECT_BASE}/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message ?? 'Erreur lors de la mise à jour du projet');
+    }
+    const data = await res.json();
+    return data.project;
+}
+
+export async function deleteProject(id: number): Promise<void> {
+    const res = await fetch(`${PROJECT_BASE}/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message ?? 'Erreur lors de la suppression du projet');
+    }
 }
 
 export async function createProject(payload: CreateProjectPayload): Promise<Project> {
