@@ -9,14 +9,14 @@ export default tseslint.config(
             'dist/**',
             'dist-frontend/**',
             'node_modules/**',
-            'src/frontend/**',
+            'frontend/**',
             'spec/**',
             'tests/**',
             '*.js',
         ],
     },
     {
-        files: ['src/**/*.ts'],
+        files: ['**/*.ts'],
         rules: {
             '@typescript-eslint/no-require-imports': 'off',
             '@typescript-eslint/no-explicit-any': 'warn',

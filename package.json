@@ -12,11 +12,10 @@
     "test:e2e": "playwright test",
     "test:persistence": "jest --testPathPattern=spec/persistence",
     "test:routes": "jest --testPathPattern=spec/routes",
-    "dev": "nodemon -L --watch src --ignore src/frontend --exec \"tsc && node dist/index.js\"",
-    "lint": "eslint src/",
-    "lint:architecture": "depcruise src --config .dependency-cruiser.cjs",
-    "frontend:dev": "cd src/frontend && npm run dev",
-    "frontend:build": "cd src/frontend && npm run build"
+    "lint": "eslint .",
+    "lint:architecture": "depcruise . --config .dependency-cruiser.cjs",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm run build"
   },
   "dependencies": {
     "express": "^5.2.1",

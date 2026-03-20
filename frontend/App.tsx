@@ -1,14 +1,14 @@
 import React from 'react';
-import Register from '../pages/Auth/Register/Register';
-import Login from '../pages/Auth/Login/Login';
-import Home from '../pages/Home/Home';
-import ProjectDetail from '../pages/ProjectDetail/ProjectDetail';
-import SessionExpiredModal from './SessionExpiredModal';
-import NotificationToast from './NotificationToast';
-import { isAuthenticated } from '../service/authService';
-import { type Project } from '../service/projectService';
-import { UNAUTHORIZED_EVENT } from '../utils/fetchWithAuth';
-import { useNotifications } from '../hooks/useNotifications';
+import Register from './pages/Auth/Register/Register';
+import Login from './pages/Auth/Login/Login';
+import Home from './pages/Home/Home';
+import ProjectDetail from './pages/ProjectDetail/ProjectDetail';
+import SessionExpiredModal from './component/SessionExpiredModal';
+import NotificationToast from './component/NotificationToast';
+import { isAuthenticated } from './service/authService';
+import { type Project } from './service/projectService';
+import { UNAUTHORIZED_EVENT } from './utils/fetchWithAuth';
+import { useNotifications } from './hooks/useNotifications';
 
 type Page = 'register' | 'login' | 'home' | 'project';
 
