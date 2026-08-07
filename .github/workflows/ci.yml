@@ -79,7 +79,7 @@ jobs:
 
             - name: Upload rapport coverage auth-service
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: coverage-auth-service
                   path: auth-service/coverage/
@@ -112,7 +112,7 @@ jobs:
 
             - name: Upload rapport coverage project-service
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: coverage-project-service
                   path: project-service/coverage/
@@ -145,7 +145,7 @@ jobs:
 
             - name: Upload rapport coverage task-service
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: coverage-task-service
                   path: task-service/coverage/
@@ -178,7 +178,7 @@ jobs:
 
             - name: Upload rapport coverage notification-service
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: coverage-notification-service
                   path: notification-service/coverage/
