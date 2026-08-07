@@ -22,7 +22,7 @@ jobs:
             dockerfile: ${{ steps.filter.outputs.dockerfile }}
             manifest: ${{ steps.filter.outputs.manifest }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: dorny/paths-filter@v3
               id: filter
@@ -58,7 +58,7 @@ jobs:
         if: needs.changes.outputs.auth == 'true'
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: actions/setup-node@v4
               with:
@@ -91,7 +91,7 @@ jobs:
         if: needs.changes.outputs.project == 'true'
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: actions/setup-node@v4
               with:
@@ -124,7 +124,7 @@ jobs:
         if: needs.changes.outputs.task == 'true'
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: actions/setup-node@v4
               with:
@@ -157,7 +157,7 @@ jobs:
         if: needs.changes.outputs.notification == 'true'
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: actions/setup-node@v4
               with:
@@ -197,7 +197,7 @@ jobs:
             needs.changes.outputs.notification == 'true'
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: actions/setup-node@v4
               with:
@@ -225,7 +225,7 @@ jobs:
                     - notification-service
                     - frontend
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf  # v3.1.0
               with:
@@ -244,7 +244,7 @@ jobs:
           needs.changes.outputs.notification == 'true'
       runs-on: ubuntu-latest
       steps:
-          - uses: actions/checkout@v4
+          - uses: actions/checkout@v6
 
           - uses: actions/setup-node@v4
             with:
@@ -349,7 +349,7 @@ jobs:
                       context: ./frontend
                       dockerfile: ./frontend/Dockerfile
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3
 

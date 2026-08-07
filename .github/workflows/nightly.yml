@@ -14,7 +14,7 @@ jobs:
     outputs:
       has_changes: ${{ steps.check.outputs.has_changes }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -81,7 +81,7 @@ jobs:
     if: needs.check-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Démarrage de la stack Docker Compose
         run: docker compose up -d --build
@@ -135,7 +135,7 @@ jobs:
           - notification-service
           - frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build image ${{ matrix.service }}
         run: docker build -t ${{ matrix.service }}:scan ./${{ matrix.service }}
@@ -164,7 +164,7 @@ jobs:
     permissions:
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Initialisation CodeQL
         uses: github/codeql-action/init@c35d1b164463ee62a100735382aaaa525c5d3496  # v4
